@@ -33,13 +33,14 @@ Kontrola obrazovky: po spuštění je vidět výchozí zpráva; prázdný vstup 
 ## 2. Tréninky v paměti
 
 - [x] Zavést základ `Workout`: ID, název, začátek a kontrolu platnosti názvu.
-- [ ] Definovat `IWorkoutRepository` a implementaci v paměti.
+- [x] Definovat `IWorkoutRepository` pro přidání, seznam a hledání podle ID.
+- [ ] Implementovat úložiště v paměti.
 - [ ] Přidat vytvoření tréninku, seznam a detail.
 - [ ] Vysvětlit kolekce, navigaci pomocí ID a životnost úložiště.
 
 Hotovo, když lze vytvořit více tréninků a otevřít jejich detaily. Záznamy přežijí navigaci v rámci běhu aplikace; po restartu se ztratí.
 
-Krok 2 dělíme na malé části: nejprve model, potom rozhraní úložiště, jeho implementace v paměti a nakonec propojení formuláře se seznamem a detailem. Nyní je připraven pouze model. Konec tréninku a poznámky doplníme až s funkcemi, které je využijí.
+Krok 2 dělíme na malé části: nejprve model, potom rozhraní úložiště, jeho implementace v paměti a nakonec propojení formuláře se seznamem a detailem. Nyní je připraven model a rozhraní, zatím bez implementace ukládání nebo změny formuláře. Konec tréninku a poznámky doplníme až s funkcemi, které je využijí.
 
 ## 3. Lokální SQLite
 

@@ -70,7 +70,19 @@ Ukládání a načítání používá asynchronní API. ViewModel během operace
 
 Nejdřív použijeme úložiště v paměti. Přechod na SQLite má měnit implementaci úložiště a registraci závislostí, nikoliv způsob ukládání ve stránkách. Konkrétní knihovny zvolíme a zdokumentujeme při příslušném kroku.
 
-## Implementace prvního kroku
+## Aktuální implementace
+
+### Rozhraní úložiště v kroku 2
+
+`Application/Workouts/IWorkoutRepository.cs` definuje tři operace: `AddAsync`, `GetAllAsync` a `GetByIdAsync`. Implementace zatím neexistuje a rozhraní ještě není registrované v DI ani používané ViewModelem.
+
+Návratové typy používají `Task`, aby databázová implementace mohla pracovat asynchronně. To samo o sobě nevytváří nové vlákno. Seznam je snímek pouze pro čtení, seřazený podle začátku sestupně a při shodě podle ID vzestupně. Neexistující ID vrací `null`; selhání úložiště je výjimka. Přidání duplicitního ID nesmí přepsat záznam a vyvolá `InvalidOperationException`. Názvy tréninků mohou být stejné.
+
+Při načtení nesmí implementace vytvářet nová ID místo uložených. Způsob obnovení modelu s existujícím ID doplníme při databázové implementaci.
+
+Nový jmenný prostor `FitnessTracker.Application` se jmenuje stejně jako základní třída MAUI `Application`. Proto má `App` výslovně uvedeného předka `Microsoft.Maui.Controls.Application`.
+
+### MVVM formuláře
 
 - `WorkoutViewModel` ručně implementuje `INotifyPropertyChanged`. Settery oznamují změny bindingu; `CallerMemberName` doplňuje název vlastnosti.
 - `ConfirmWorkoutCommand` používá vestavěný MAUI `Command`, vystavený přes `ICommand`. Další NuGet balíček zatím nepotřebujeme; mechanismus je přímo vidět v kódu.

@@ -2,7 +2,8 @@
 
 namespace FitnessTracker
 {
-    public partial class App : Application
+    // Úplný název odlišuje třídu MAUI od našeho jmenného prostoru FitnessTracker.Application.
+    public partial class App : Microsoft.Maui.Controls.Application
     {
         private readonly IServiceProvider services;
 
