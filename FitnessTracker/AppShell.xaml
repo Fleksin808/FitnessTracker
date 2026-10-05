@@ -7,7 +7,7 @@
     Title="FitnessTracker">
 
     <ShellContent
-        Title="Home"
+        Title="Tréninky"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
 

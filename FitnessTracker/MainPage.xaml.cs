@@ -2,23 +2,22 @@
 {
     public partial class MainPage : ContentPage
     {
-        int count = 0;
-
         public MainPage()
         {
             InitializeComponent();
         }
 
-        private void OnCounterClicked(object? sender, EventArgs e)
+        private void OnWorkoutClicked(object? sender, EventArgs e)
         {
-            count++;
+            string? workoutName = WorkoutNameEntry.Text?.Trim();
 
-            if (count == 1)
-                CounterBtn.Text = $"Clicked {count} time";
-            else
-                CounterBtn.Text = $"Clicked {count} times";
+            if (string.IsNullOrWhiteSpace(workoutName))
+            {
+                WorkoutResultLabel.Text = "Nejdřív zadej název tréninku.";
+                return;
+            }
 
-            SemanticScreenReader.Announce(CounterBtn.Text);
+            WorkoutResultLabel.Text = $"Tvůj trénink: {workoutName}";
         }
     }
 }
