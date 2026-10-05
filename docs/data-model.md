@@ -2,7 +2,7 @@
 
 ## Stav a rozsah
 
-Toto je návrh první verze deníku silových tréninků. Zatím není implementována databáze ani níže uvedené entity. Tabulky přidáváme postupně podle [roadmapy](roadmap.md).
+Toto je návrh první verze deníku silových tréninků. Implementován je zatím základ modelu `Workout` s `Id`, `Name` a `StartedAt`; není ještě propojen s formulářem. Databáze ani ostatní entity neexistují. Zbývající pole a tabulky přidáváme postupně podle [roadmapy](roadmap.md).
 
 Aplikace bude ukládat hlavní data lokálně do SQLite. Databázový soubor `fitness-tracker.db3` bude v datovém adresáři aplikace získaném přes MAUI `FileSystem.AppDataDirectory`, nikoliv pomocí pevné cesty na Windows nebo Androidu.
 
@@ -22,6 +22,8 @@ Workout (trénink)
 Stejný cvik se může objevit ve více trénincích i vícekrát v jednom tréninku. Definice cviku neobsahuje opakování ani zátěž; ty patří konkrétní sérii.
 
 ### Workout
+
+Současný konstruktor `Workout(string name, DateTimeOffset startedAt)` vytvoří nové ID, odmítne prázdný název, odstraní jeho okrajové mezery a převede předaný čas do UTC. Vlastnosti mají zatím pouze getter, aby nebylo možné obejít kontrolu dodatečným přiřazením. Změnu názvu a načtení existujícího ID z úložiště navrhneme při příslušných operacích. `FinishedAt` a `Notes` v tabulce níže jsou plánovaná pole.
 
 | Pole | Typ v C# | Význam |
 | --- | --- | --- |

@@ -15,26 +15,31 @@ Platí [architektura](architecture.md) a [datové dohody](data-model.md). Stav k
 - [x] Tato úprava prošla sestavením pro Windows.
 - [x] Návrh architektury, dat a pořadí práce je uložen v dokumentaci.
 
-Dosud nemáme seznam tréninků, doménové modely, MVVM ani ukládání. Spuštění na telefonu není dosud ověřené.
+Existuje základ doménového modelu `Workout`, zatím bez propojení s formulářem. Seznam tréninků a ukládání dosud nemáme. První krok MVVM je implementován; praktické ověření obrazovky je zatím otevřené. Spuštění na telefonu není dosud ověřené.
 
 ## 1. MVVM a rozdělení odpovědností
 
-- [ ] Převést současnou stránku na View a ViewModel v `Features/Workouts`.
-- [ ] Vysvětlit binding, oznamování změn vlastností a příkazy.
-- [ ] Přesunout zpracování vstupu z code-behind do ViewModelu.
-- [ ] Zavést předávání a registraci potřebných závislostí.
-- [ ] Zdokumentovat případnou vybranou pomocnou knihovnu a její účel.
+- [x] Převést současnou stránku na View a ViewModel v `Features/Workouts`.
+- [x] Vysvětlit binding, oznamování změn vlastností a příkazy v komentářích a dokumentaci.
+- [x] Přesunout zpracování vstupu z code-behind do ViewModelu.
+- [x] Zavést předávání a registraci potřebných závislostí.
+- [x] Zdokumentovat volbu vestavěného `Command` a ručního `INotifyPropertyChanged` bez další knihovny.
+- [ ] Prakticky ověřit spuštění stránky, binding a příkaz.
 
 Hotovo, když zadání názvu a kontrola prázdného vstupu fungují přes binding a příkaz. Zatím bez databáze.
 
+Kontrola obrazovky: po spuštění je vidět výchozí zpráva; prázdný vstup i samotné mezery vypíšou upozornění; `  Trénink nohou  ` zobrazí `Tvůj trénink: Trénink nohou`; změna názvu a další potvrzení aktualizují výsledek. Ověřit také prázdný vstup po předchozím úspěšném potvrzení.
+
 ## 2. Tréninky v paměti
 
-- [ ] Zavést `Workout` a jeho základní pravidla.
+- [x] Zavést základ `Workout`: ID, název, začátek a kontrolu platnosti názvu.
 - [ ] Definovat `IWorkoutRepository` a implementaci v paměti.
 - [ ] Přidat vytvoření tréninku, seznam a detail.
 - [ ] Vysvětlit kolekce, navigaci pomocí ID a životnost úložiště.
 
 Hotovo, když lze vytvořit více tréninků a otevřít jejich detaily. Záznamy přežijí navigaci v rámci běhu aplikace; po restartu se ztratí.
+
+Krok 2 dělíme na malé části: nejprve model, potom rozhraní úložiště, jeho implementace v paměti a nakonec propojení formuláře se seznamem a detailem. Nyní je připraven pouze model. Konec tréninku a poznámky doplníme až s funkcemi, které je využijí.
 
 ## 3. Lokální SQLite
 

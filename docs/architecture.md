@@ -4,7 +4,7 @@
 
 FitnessTracker je .NET MAUI aplikace pro evidenci tréninků, vyvíjená po malých krocích s vysvětlením návrhu a kódu. První použitelná verze má fungovat lokálně bez připojení k internetu.
 
-Tento dokument popisuje cílovou architekturu. Aktuálně projekt obsahuje jednoduchou stránku s textovým polem a tlačítkem; chování je v `MainPage.xaml.cs`. MVVM, moduly a databáze se budou zavádět podle [roadmapy](roadmap.md).
+Tento dokument popisuje cílovou architekturu. Aktuálně je jednoduchý formulář v `Features/Workouts/WorkoutPage.xaml` a jeho chování ve `WorkoutViewModel.cs`. Stránka používá MVVM a závislosti sestavuje DI. V `Domain/Workouts/Workout.cs` je základ modelu tréninku, dosud bez propojení s formulářem. Úložiště, další modely a databáze přibudou podle [roadmapy](roadmap.md).
 
 ## Rozdělení projektu
 
@@ -69,6 +69,17 @@ Samostatnou službu pro operaci vytvoříme, když operace obsahuje pravidla neb
 Ukládání a načítání používá asynchronní API. ViewModel během operace brání opakovanému odeslání a zobrazí srozumitelnou chybu při selhání. Pravidla platnosti dat nesmějí existovat pouze ve formuláři.
 
 Nejdřív použijeme úložiště v paměti. Přechod na SQLite má měnit implementaci úložiště a registraci závislostí, nikoliv způsob ukládání ve stránkách. Konkrétní knihovny zvolíme a zdokumentujeme při příslušném kroku.
+
+## Implementace prvního kroku
+
+- `WorkoutViewModel` ručně implementuje `INotifyPropertyChanged`. Settery oznamují změny bindingu; `CallerMemberName` doplňuje název vlastnosti.
+- `ConfirmWorkoutCommand` používá vestavěný MAUI `Command`, vystavený přes `ICommand`. Další NuGet balíček zatím nepotřebujeme; mechanismus je přímo vidět v kódu.
+- `WorkoutPage` dostane ViewModel konstruktorem a nastaví `BindingContext`. `x:DataType` deklaruje typ pro kontrolu bindingů při sestavení, ale instanci ViewModelu nevytváří.
+- `Entry.Text` má explicitní `TwoWay` binding; výsledný `Label.Text` má `OneWay` binding.
+- `MauiProgram` registruje Shell, stránku a ViewModel jako transient. `App` vyžádá nový Shell při vytváření okna; `AppShell` dostane stránku konstruktorem. Rozhodnutí o získání instancí z DI zůstává v těchto vstupních bodech, nikoliv ve ViewModelu.
+- ViewModel nyní pouze validuje vstup a nastavuje zprávu. Záznam tréninku ani ukládání zatím neexistují. Doménová pravidla přidáme v kroku 2.
+
+Podklady: [compiled bindings](https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/data-binding/compiled-bindings?view=net-maui-10.0) a [dependency injection](https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/dependency-injection?view=net-maui-10.0).
 
 ## Přidání modulu
 
