@@ -18,6 +18,10 @@
             <!-- Příkaz nahrazuje obsluhu události Clicked v code-behind. -->
             <Button Text="Potvrdit trénink" Command="{Binding ConfirmWorkoutCommand}"
                     HorizontalOptions="Fill" />
+            <!-- Indikátor sleduje skutečný stav operace ve ViewModelu. -->
+            <ActivityIndicator IsRunning="{Binding IsSaving}"
+                               IsVisible="{Binding IsSaving}"
+                               SemanticProperties.Description="Ukládání tréninku" />
             <!-- Výsledek se přenáší pouze z ViewModelu do zobrazení. -->
             <Label Text="{Binding WorkoutResult, Mode=OneWay}" />
         </VerticalStackLayout>

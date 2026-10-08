@@ -15,7 +15,7 @@ Platí [architektura](architecture.md) a [datové dohody](data-model.md). Stav k
 - [x] Tato úprava prošla sestavením pro Windows.
 - [x] Návrh architektury, dat a pořadí práce je uložen v dokumentaci.
 
-Existuje základ doménového modelu `Workout` a úložiště v paměti, zatím bez propojení s formulářem. Seznam tréninků na obrazovce a trvalé ukládání dosud nemáme. První krok MVVM je implementován; praktické ověření obrazovky je zatím otevřené. Spuštění na telefonu není dosud ověřené.
+Existuje základ doménového modelu `Workout` a úložiště v paměti propojené s formulářem. Seznam tréninků na obrazovce a trvalé ukládání dosud nemáme. První krok MVVM je implementován; praktické ověření obrazovky je zatím otevřené. Spuštění na telefonu není dosud ověřené.
 
 ## 1. MVVM a rozdělení odpovědností
 
@@ -28,19 +28,24 @@ Existuje základ doménového modelu `Workout` a úložiště v paměti, zatím 
 
 Hotovo, když zadání názvu a kontrola prázdného vstupu fungují přes binding a příkaz. Zatím bez databáze.
 
-Kontrola obrazovky: po spuštění je vidět výchozí zpráva; prázdný vstup i samotné mezery vypíšou upozornění; `  Trénink nohou  ` zobrazí `Tvůj trénink: Trénink nohou`; změna názvu a další potvrzení aktualizují výsledek. Ověřit také prázdný vstup po předchozím úspěšném potvrzení.
+Kontrola obrazovky: po spuštění je vidět výchozí zpráva; prázdný vstup i samotné mezery vypíšou upozornění; `  Trénink nohou  ` zobrazí `Trénink přidán do paměti: Trénink nohou`; změna názvu a další potvrzení aktualizují výsledek. Ověřit také prázdný vstup po předchozím úspěšném potvrzení.
 
 ## 2. Tréninky v paměti
 
 - [x] Zavést základ `Workout`: ID, název, začátek a kontrolu platnosti názvu.
 - [x] Definovat `IWorkoutRepository` pro přidání, seznam a hledání podle ID.
 - [x] Implementovat úložiště v paměti a registrovat je v DI jako singleton.
-- [ ] Přidat vytvoření tréninku, seznam a detail.
-- [ ] Vysvětlit kolekce, navigaci pomocí ID a životnost úložiště.
+- [x] Propojit formulář s vytvořením a přidáním tréninku; ošetřit chyby a opakované odeslání.
+- [x] Připravit `Workouts`, načítání při otevření stránky a obnovu po přidání.
+- [x] Vysvětlit oznamování změn kolekce a sdílenou životnost úložiště.
+- [ ] Zobrazit kolekci tréninků v UI pomocí `CollectionView` (chat UI).
+- [ ] Přidat detail a vysvětlit navigaci pomocí ID.
 
 Hotovo, když lze vytvořit více tréninků a otevřít jejich detaily. Záznamy přežijí navigaci v rámci běhu aplikace; po restartu se ztratí.
 
-Krok 2 dělíme na malé části: nejprve model, potom rozhraní úložiště, jeho implementace v paměti a nakonec propojení formuláře se seznamem a detailem. Nyní je připraven model, rozhraní i úložiště v paměti registrované v DI. Formulář zatím úložiště nepoužívá. Konec tréninku a poznámky doplníme až s funkcemi, které je využijí.
+Krok 2 dělíme na malé části: nejprve model, potom rozhraní úložiště, jeho implementace v paměti a nakonec propojení formuláře se seznamem a detailem. Nyní je připraven model, rozhraní i úložiště v paměti registrované v DI. Formulář vytváří trénink a přidává ho přes rozhraní úložiště. Automaticky bylo ověřeno přidání, aktuální čas, prázdný vstup, blokace opakovaného volání při čekání, synchronní i asynchronní chyba a úspěšné opakování po chybě. Praktické ověření UI zůstává otevřené. Konec tréninku a poznámky doplníme až s funkcemi, které je využijí.
+
+Příprava seznamu v kroku 2: `WorkoutViewModel.Workouts` je stabilní instance `ObservableCollection<Workout>`. `LoadWorkoutsAsync` načte data a `WorkoutPage.OnAppearing` ji volá při zobrazení stránky. Po přidání se kolekce obnoví. `IsLoading`, `LoadError` a `LoadWorkoutsCommand` jsou připravené pro chat UI; seznam ani chybu načítání zatím XAML nezobrazuje. Ověřeno bylo řazení, obnova, oznámení kolekce, načtení sdílených dat, zachování položek při chybě, odlišení chyby čtení po úspěšném zápisu a blokace souběžných operací. Sestavení pro Windows prošlo bez chyb a upozornění; UI nebylo spuštěno.
 
 ## 3. Lokální SQLite
 

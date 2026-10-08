@@ -2,7 +2,7 @@
 
 ## Stav a rozsah
 
-Toto je návrh první verze deníku silových tréninků. Implementován je zatím základ modelu `Workout` s `Id`, `Name` a `StartedAt`; není ještě propojen s formulářem. Databáze ani ostatní entity neexistují. Zbývající pole a tabulky přidáváme postupně podle [roadmapy](roadmap.md).
+Toto je návrh první verze deníku silových tréninků. Implementován je zatím základ modelu `Workout` s `Id`, `Name` a `StartedAt`; formulář ho vytváří a přidává do úložiště v paměti. Databáze ani ostatní entity neexistují. Zbývající pole a tabulky přidáváme postupně podle [roadmapy](roadmap.md).
 
 Aplikace bude ukládat hlavní data lokálně do SQLite. Databázový soubor `fitness-tracker.db3` bude v datovém adresáři aplikace získaném přes MAUI `FileSystem.AppDataDirectory`, nikoliv pomocí pevné cesty na Windows nebo Androidu.
 
