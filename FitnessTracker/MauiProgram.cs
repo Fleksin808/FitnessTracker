@@ -3,6 +3,8 @@
 namespace FitnessTracker
 {
     using Features.Workouts;
+    using Application.Workouts;
+    using Infrastructure.Persistence;
     using Microsoft.Extensions.DependencyInjection;
 
     public static class MauiProgram
@@ -21,6 +23,9 @@ namespace FitnessTracker
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
+
+            // Jedna instance úložiště sdílí tréninky po celý běh aplikace i mezi stránkami.
+            builder.Services.AddSingleton<IWorkoutRepository, InMemoryWorkoutRepository>();
 
             // Transient znamená novou instanci při každém vyžádání z DI.
             // DI podle konstruktorů sestaví AppShell → WorkoutPage → WorkoutViewModel.

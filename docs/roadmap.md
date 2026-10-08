@@ -15,7 +15,7 @@ Platí [architektura](architecture.md) a [datové dohody](data-model.md). Stav k
 - [x] Tato úprava prošla sestavením pro Windows.
 - [x] Návrh architektury, dat a pořadí práce je uložen v dokumentaci.
 
-Existuje základ doménového modelu `Workout`, zatím bez propojení s formulářem. Seznam tréninků a ukládání dosud nemáme. První krok MVVM je implementován; praktické ověření obrazovky je zatím otevřené. Spuštění na telefonu není dosud ověřené.
+Existuje základ doménového modelu `Workout` a úložiště v paměti, zatím bez propojení s formulářem. Seznam tréninků na obrazovce a trvalé ukládání dosud nemáme. První krok MVVM je implementován; praktické ověření obrazovky je zatím otevřené. Spuštění na telefonu není dosud ověřené.
 
 ## 1. MVVM a rozdělení odpovědností
 
@@ -34,13 +34,13 @@ Kontrola obrazovky: po spuštění je vidět výchozí zpráva; prázdný vstup 
 
 - [x] Zavést základ `Workout`: ID, název, začátek a kontrolu platnosti názvu.
 - [x] Definovat `IWorkoutRepository` pro přidání, seznam a hledání podle ID.
-- [ ] Implementovat úložiště v paměti.
+- [x] Implementovat úložiště v paměti a registrovat je v DI jako singleton.
 - [ ] Přidat vytvoření tréninku, seznam a detail.
 - [ ] Vysvětlit kolekce, navigaci pomocí ID a životnost úložiště.
 
 Hotovo, když lze vytvořit více tréninků a otevřít jejich detaily. Záznamy přežijí navigaci v rámci běhu aplikace; po restartu se ztratí.
 
-Krok 2 dělíme na malé části: nejprve model, potom rozhraní úložiště, jeho implementace v paměti a nakonec propojení formuláře se seznamem a detailem. Nyní je připraven model a rozhraní, zatím bez implementace ukládání nebo změny formuláře. Konec tréninku a poznámky doplníme až s funkcemi, které je využijí.
+Krok 2 dělíme na malé části: nejprve model, potom rozhraní úložiště, jeho implementace v paměti a nakonec propojení formuláře se seznamem a detailem. Nyní je připraven model, rozhraní i úložiště v paměti registrované v DI. Formulář zatím úložiště nepoužívá. Konec tréninku a poznámky doplníme až s funkcemi, které je využijí.
 
 ## 3. Lokální SQLite
 

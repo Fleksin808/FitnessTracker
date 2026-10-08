@@ -4,7 +4,7 @@
 
 FitnessTracker je .NET MAUI aplikace pro evidenci tréninků, vyvíjená po malých krocích s vysvětlením návrhu a kódu. První použitelná verze má fungovat lokálně bez připojení k internetu.
 
-Tento dokument popisuje cílovou architekturu. Aktuálně je jednoduchý formulář v `Features/Workouts/WorkoutPage.xaml` a jeho chování ve `WorkoutViewModel.cs`. Stránka používá MVVM a závislosti sestavuje DI. V `Domain/Workouts/Workout.cs` je základ modelu tréninku, dosud bez propojení s formulářem. Úložiště, další modely a databáze přibudou podle [roadmapy](roadmap.md).
+Tento dokument popisuje cílovou architekturu. Aktuálně je jednoduchý formulář v `Features/Workouts/WorkoutPage.xaml` a jeho chování ve `WorkoutViewModel.cs`. Stránka používá MVVM a závislosti sestavuje DI. V `Domain/Workouts/Workout.cs` je základ modelu tréninku, dosud bez propojení s formulářem. Úložiště v paměti je připravené; další modely a databáze přibudou podle [roadmapy](roadmap.md).
 
 ## Rozdělení projektu
 
@@ -74,13 +74,21 @@ Nejdřív použijeme úložiště v paměti. Přechod na SQLite má měnit imple
 
 ### Rozhraní úložiště v kroku 2
 
-`Application/Workouts/IWorkoutRepository.cs` definuje tři operace: `AddAsync`, `GetAllAsync` a `GetByIdAsync`. Implementace zatím neexistuje a rozhraní ještě není registrované v DI ani používané ViewModelem.
+`Application/Workouts/IWorkoutRepository.cs` definuje tři operace: `AddAsync`, `GetAllAsync` a `GetByIdAsync`. Implementuje je `Infrastructure/Persistence/InMemoryWorkoutRepository.cs`. Rozhraní je registrované v DI, ale ViewModel ho zatím nepoužívá.
 
 Návratové typy používají `Task`, aby databázová implementace mohla pracovat asynchronně. To samo o sobě nevytváří nové vlákno. Seznam je snímek pouze pro čtení, seřazený podle začátku sestupně a při shodě podle ID vzestupně. Neexistující ID vrací `null`; selhání úložiště je výjimka. Přidání duplicitního ID nesmí přepsat záznam a vyvolá `InvalidOperationException`. Názvy tréninků mohou být stejné.
 
 Při načtení nesmí implementace vytvářet nová ID místo uložených. Způsob obnovení modelu s existujícím ID doplníme při databázové implementaci.
 
 Nový jmenný prostor `FitnessTracker.Application` se jmenuje stejně jako základní třída MAUI `Application`. Proto má `App` výslovně uvedeného předka `Microsoft.Maui.Controls.Application`.
+
+### Úložiště v paměti
+
+`InMemoryWorkoutRepository` používá `Dictionary<Guid, Workout>` a chrání přístup pomocí `lock`. Vrací seřazený snímek zabalený do kolekce pouze pro čtení. Model `Workout` má zatím jen neměnné vlastnosti, takže nelze přes vrácený model změnit uložené údaje.
+
+Operace jsou okamžité: `Task.CompletedTask` představuje dokončený zápis, `Task.FromResult` dokončené načtení s výsledkem. Není potřeba `async`, `await` ani `Task.Run`. Zámek se používá jen pro krátké operace v paměti; budoucí databázový kód bude mít vlastní způsob přístupu.
+
+Registrace `AddSingleton<IWorkoutRepository, InMemoryWorkoutRepository>()` zajistí jednu instanci pro celý běh aplikace. Nově vytvořená stránka tak později získá stejné tréninky. Restart aplikace paměť vymaže; nejde o databázi ani zálohu.
 
 ### MVVM formuláře
 
