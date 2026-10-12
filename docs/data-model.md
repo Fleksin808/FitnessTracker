@@ -2,9 +2,9 @@
 
 ## Stav a rozsah
 
-Toto je návrh první verze deníku silových tréninků. Implementován je zatím základ modelu `Workout` s `Id`, `Name` a `StartedAt`; formulář ho vytváří a přidává do úložiště v paměti. Databáze ani ostatní entity neexistují. Zbývající pole a tabulky přidáváme postupně podle [roadmapy](roadmap.md).
+Toto je návrh první verze deníku silových tréninků. Implementován je základ modelu `Workout` s `Id`, `Name` a `StartedAt`, formulář, seznam a detail. Tréninky se ukládají do SQLite tabulky `Workouts`. Ostatní entity, zbývající pole a tabulky přidáváme postupně podle [roadmapy](roadmap.md).
 
-Aplikace bude ukládat hlavní data lokálně do SQLite. Databázový soubor `fitness-tracker.db3` bude v datovém adresáři aplikace získaném přes MAUI `FileSystem.AppDataDirectory`, nikoliv pomocí pevné cesty na Windows nebo Androidu.
+Aplikace ukládá hlavní data lokálně do SQLite. Databázový soubor `fitness-tracker.db3` je v datovém adresáři aplikace získaném přes MAUI `FileSystem.AppDataDirectory`, nikoliv pomocí pevné cesty na Windows nebo Androidu. Vytváří se při první práci s úložištěm. Běžné zavření aplikace soubor zachová; odinstalace nebo vymazání dat aplikace může data odstranit. Dosavadní čistě paměťové záznamy nejsou zdrojem pro automatickou migraci.
 
 Drobná nastavení patří do MAUI Preferences. JSON je plánovaný formát exportu a importu; není hlavním úložištěm.
 
@@ -23,7 +23,7 @@ Stejný cvik se může objevit ve více trénincích i vícekrát v jednom trén
 
 ### Workout
 
-Současný konstruktor `Workout(string name, DateTimeOffset startedAt)` vytvoří nové ID, odmítne prázdný název, odstraní jeho okrajové mezery a převede předaný čas do UTC. Vlastnosti mají zatím pouze getter, aby nebylo možné obejít kontrolu dodatečným přiřazením. Změnu názvu a načtení existujícího ID z úložiště navrhneme při příslušných operacích. `FinishedAt` a `Notes` v tabulce níže jsou plánovaná pole.
+Konstruktor `Workout(string name, DateTimeOffset startedAt)` vytvoří nové ID, odmítne prázdný název, odstraní jeho okrajové mezery a převede předaný čas do UTC. `Workout.Restore(Guid id, string name, DateTimeOffset startedAt)` zachová existující ID a použije stejnou validaci. Prázdné ID není platné. Vlastnosti mají zatím pouze getter, aby nebylo možné obejít kontrolu dodatečným přiřazením. Změnu názvu navrhneme při příslušné operaci. `FinishedAt` a `Notes` v tabulce níže jsou plánovaná pole.
 
 | Pole | Typ v C# | Význam |
 | --- | --- | --- |
@@ -96,6 +96,27 @@ V rozhraní zadává uživatel kilogramy. Převod používá `decimal`: `62,5 kg
 - Databázové implementace ukládají běžné sloupce; nepoužívají serializovaný JSON celé objektové struktury.
 
 ## Verze databáze a migrace
+
+### Implementovaná verze 1
+
+Migrace `0 → 1` vytváří tabulku:
+
+```sql
+CREATE TABLE Workouts (
+    Id TEXT NOT NULL PRIMARY KEY,
+    Name TEXT NOT NULL CHECK (length(trim(Name)) > 0),
+    StartedAt TEXT NOT NULL
+);
+PRAGMA user_version = 1;
+```
+
+Oba příkazy probíhají v jedné transakci. Záznamy ukládáme přes SQL parametry. Název není unikátní; duplicitní ID vyvolá `InvalidOperationException`. Výsledky řadíme podle časového okamžiku sestupně a při shodě podle `Guid` vzestupně, stejně jako paměťová implementace.
+
+Příklad uloženého času: `2026-10-13T16:30:00.1234567+00:00`. Při čtení používáme přesný formát `O` a invariantní kulturu. Nesprávný formát ID nebo času vyvolá chybu, nesmí se považovat za nenalezený trénink.
+
+První verze neobsahuje cizí klíče mezi tabulkami, protože existuje jen `Workouts`; jejich vynucování je už zapnuté na připojení pro budoucí migrace. Neznámou tabulku ve schématu verze 0 nepřepisujeme pomocí `IF NOT EXISTS`: konflikt migraci zastaví a zachová původní stav.
+
+### Pravidla dalších migrací
 
 První databáze obsahuje jen data potřebná v daném kroku. Další tabulky a pole přidáváme číslovanými migracemi.
 

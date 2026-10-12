@@ -24,8 +24,11 @@ namespace FitnessTracker
     		builder.Logging.AddDebug();
 #endif
 
-            // Jedna instance úložiště sdílí tréninky po celý běh aplikace i mezi stránkami.
-            builder.Services.AddSingleton<IWorkoutRepository, InMemoryWorkoutRepository>();
+            // MAUI vybere datový adresář podle platformy; soubor přežije běžný restart aplikace.
+            builder.Services.AddSingleton(_ => new FitnessDatabase(
+                Path.Combine(FileSystem.AppDataDirectory, FitnessDatabase.FileName)));
+            // ViewModely stále používají stejné rozhraní; měníme pouze implementaci úložiště.
+            builder.Services.AddSingleton<IWorkoutRepository, SqliteWorkoutRepository>();
 
             // Transient znamená novou instanci při každém vyžádání z DI.
             // DI podle konstruktorů sestaví AppShell → WorkoutPage → WorkoutViewModel.

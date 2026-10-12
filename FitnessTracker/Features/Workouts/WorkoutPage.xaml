@@ -25,6 +25,9 @@
                                SemanticProperties.Description="Ukládání tréninku" />
             <!-- Výsledek se přenáší pouze z ViewModelu do zobrazení. -->
             <Label Text="{Binding WorkoutResult, Mode=OneWay}" />
+            <!-- Selhání prvního otevření databáze musí být viditelné a umožnit další pokus. -->
+            <Label Text="{Binding LoadError}" />
+            <Button Text="Obnovit seznam" Command="{Binding LoadWorkoutsCommand}" />
         </VerticalStackLayout>
         <!-- Jednoduchý výběr předá navigaci ID tréninku; po otevření se výběr vyčistí. -->
         <CollectionView Grid.Row="1" ItemsSource="{Binding Workouts}" EmptyView="Zatím nemáš žádné tréninky"

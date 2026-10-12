@@ -4,7 +4,7 @@
 
 FitnessTracker je .NET MAUI aplikace pro evidenci tréninků, vyvíjená po malých krocích s vysvětlením návrhu a kódu. První použitelná verze má fungovat lokálně bez připojení k internetu.
 
-Tento dokument popisuje cílovou architekturu. Aktuálně je jednoduchý formulář v `Features/Workouts/WorkoutPage.xaml` a jeho chování ve `WorkoutViewModel.cs`. Stránka používá MVVM a závislosti sestavuje DI. V `Domain/Workouts/Workout.cs` je základ modelu tréninku; formulář ho vytváří a ukládá přes `IWorkoutRepository`. Úložiště v paměti je připravené; další modely a databáze přibudou podle [roadmapy](roadmap.md).
+Tento dokument popisuje cílovou architekturu. Formulář a seznam jsou v `Features/Workouts/WorkoutPage.xaml`, detail má vlastní stránku a ViewModel. Stránky používají MVVM a závislosti sestavuje DI. Model `Workout` se ukládá přes `IWorkoutRepository`; aplikace nyní používá SQLite. Úložiště v paměti zůstává jako alternativní implementace. Další moduly přibudou podle [roadmapy](roadmap.md).
 
 ## Rozdělení projektu
 
@@ -68,17 +68,17 @@ Samostatnou službu pro operaci vytvoříme, když operace obsahuje pravidla neb
 
 Ukládání a načítání používá asynchronní API. ViewModel během operace brání opakovanému odeslání a zobrazí srozumitelnou chybu při selhání. Pravidla platnosti dat nesmějí existovat pouze ve formuláři.
 
-Nejdřív použijeme úložiště v paměti. Přechod na SQLite má měnit implementaci úložiště a registraci závislostí, nikoliv způsob ukládání ve stránkách. Konkrétní knihovny zvolíme a zdokumentujeme při příslušném kroku.
+První implementace používala paměť; nyní používáme SQLite. Přechod mění implementaci úložiště a registraci závislostí, nikoliv způsob ukládání ve stránkách.
 
 ## Aktuální implementace
 
 ### Rozhraní úložiště v kroku 2
 
-`Application/Workouts/IWorkoutRepository.cs` definuje tři operace: `AddAsync`, `GetAllAsync` a `GetByIdAsync`. Implementuje je `Infrastructure/Persistence/InMemoryWorkoutRepository.cs`. Rozhraní je registrované v DI a ViewModel ho dostává konstruktorem.
+`Application/Workouts/IWorkoutRepository.cs` definuje tři operace: `AddAsync`, `GetAllAsync` a `GetByIdAsync`. Implementují je `InMemoryWorkoutRepository` a `SqliteWorkoutRepository` v `Infrastructure/Persistence`. V DI je aktuálně registrovaná SQLite varianta. Oba ViewModely dostávají rozhraní konstruktorem.
 
 Návratové typy používají `Task`, aby databázová implementace mohla pracovat asynchronně. To samo o sobě nevytváří nové vlákno. Seznam je snímek pouze pro čtení, seřazený podle začátku sestupně a při shodě podle ID vzestupně. Neexistující ID vrací `null`; selhání úložiště je výjimka. Přidání duplicitního ID nesmí přepsat záznam a vyvolá `InvalidOperationException`. Názvy tréninků mohou být stejné.
 
-Při načtení nesmí implementace vytvářet nová ID místo uložených. Způsob obnovení modelu s existujícím ID doplníme při databázové implementaci.
+Při načtení nesmí implementace vytvářet nová ID místo uložených. Metoda `Workout.Restore` zachová ID a ověří platnost modelu stejným privátním konstruktorem jako vytvoření nového tréninku.
 
 Nový jmenný prostor `FitnessTracker.Application` se jmenuje stejně jako základní třída MAUI `Application`. Proto má `App` výslovně uvedeného předka `Microsoft.Maui.Controls.Application`.
 
@@ -88,7 +88,24 @@ Nový jmenný prostor `FitnessTracker.Application` se jmenuje stejně jako zákl
 
 Operace jsou okamžité: `Task.CompletedTask` představuje dokončený zápis, `Task.FromResult` dokončené načtení s výsledkem. Není potřeba `async`, `await` ani `Task.Run`. Zámek se používá jen pro krátké operace v paměti; budoucí databázový kód bude mít vlastní způsob přístupu.
 
-Registrace `AddSingleton<IWorkoutRepository, InMemoryWorkoutRepository>()` zajistí jednu instanci pro celý běh aplikace. Nově vytvořená stránka tak později získá stejné tréninky. Restart aplikace paměť vymaže; nejde o databázi ani zálohu.
+Původní registrace `AddSingleton<IWorkoutRepository, InMemoryWorkoutRepository>()` zajišťovala jednu instanci pro celý běh aplikace. Restart aplikace paměť vymaže; nejde o databázi ani zálohu. Tato varianta nyní není v aplikaci registrována.
+
+### SQLite v kroku 3
+
+Používáme `sqlite-net-pcl` ve verzi `1.11.285`. Je to lehká knihovna s asynchronním API, kterou používá také oficiální příklad MAUI. Nepotřebujeme další ORM ani SQL ve ViewModelech. Verzi máme připnutou v projektu aplikace i integračního ověření.
+
+- `FitnessDatabase` dostane cestu z `MauiProgram` a vytváří sdílené připojení. Databáze se otevře při první operaci. `SemaphoreSlim` chrání inicializaci před souběhem a `finally` vždy uvolní čekající volání. `FullMutex` zajistí bezpečný režim připojení pro asynchronní API knihovny.
+- Inicializace zapne cizí klíče a v transakci provede migraci `0 → 1`. Verzi eviduje `PRAGMA user_version`. Chyba neoznačí inicializaci za dokončenou a umožní další pokus. Novější verze se odmítne; data se nemažou ani neresetují.
+- `WorkoutRow` reprezentuje databázové sloupce a převádí `Guid` a UTC čas na text. Pouze tento záznam má atribut SQLite a veřejné settery pro mapování. `Workout` nemá závislost na knihovně.
+- `SqliteWorkoutRepository` implementuje stejné rozhraní jako paměťová varianta. Přidání kontroluje ID a zapisuje v jedné transakci pomocí parametrů. Čtení mapuje záznamy přes `Workout.Restore` a vrací seřazený snímek pouze pro čtení. Poškozený záznam vyvolá chybu.
+- `MauiProgram` registruje databázi i repository jako singleton a předává cestu `Path.Combine(FileSystem.AppDataDirectory, FitnessDatabase.FileName)`. Připojení patří celému běhu aplikace. Záloha a výměna databázového souboru budou později vyžadovat koordinované uzavření připojení.
+- Na hlavní stránce se zobrazuje `LoadError` a je dostupné opakované načtení. ViewModel zachovává rozlišení úspěšného zápisu od neúspěšné obnovy seznamu.
+
+Tok dat: `WorkoutViewModel → IWorkoutRepository → SqliteWorkoutRepository → FitnessDatabase → soubor SQLite`. Při čtení proběhne `WorkoutRow → Workout.Restore → Workout → ViewModel`.
+
+Opakovatelné integrační ověření je v [tests/FitnessTracker.PersistenceChecks](../tests/FitnessTracker.PersistenceChecks/README.md). Používá vlastní databáze a zahrnuje zápis a čtení ve dvou samostatných procesech. Praktický restart MAUI aplikace a telefon se ověřují zvlášť.
+
+Podklady: [SQLite v MAUI](https://learn.microsoft.com/en-us/dotnet/maui/data-cloud/database-sqlite?view=net-maui-10.0), [sqlite-net-pcl](https://www.nuget.org/packages/sqlite-net-pcl/1.11.285).
 
 ### MVVM formuláře
 
@@ -109,7 +126,7 @@ Podklady: [compiled bindings](https://learn.microsoft.com/en-us/dotnet/maui/fund
 
 Neúspěšné čtení zachová předchozí kolekci a nastaví `LoadError`; úspěšné opakování chybu odstraní. Pokud se zápis podaří a obnova seznamu selže, výsledná zpráva výslovně potvrzuje zápis a doporučí opakovat načtení. Nesmí uživateli doporučovat znovu přidat stejný trénink.
 
-Kontrakt pro chat UI: `Workouts` slouží jako `ItemsSource`, položka má typ `Workout` s `Name` a `StartedAt` (UTC; zobrazit místně). `IsLoading` řídí indikátor načítání, `LoadError` zprávu o chybě a `LoadWorkoutsCommand` opakované načtení. Počáteční načtení už řeší stránka; nepřidávat druhé souběžné načtení. Seznam v XAML je implementován uživatelem a jeho fungování při spuštění bylo potvrzeno. Indikátor IsLoading a zpráva LoadError na hlavní stránce zatím nejsou zobrazené.
+Kontrakt pro chat UI: `Workouts` slouží jako `ItemsSource`, položka má typ `Workout` s `Name` a `StartedAt` (UTC; zobrazit místně). `IsLoading` řídí indikátor načítání, `LoadError` zprávu o chybě a `LoadWorkoutsCommand` opakované načtení. Počáteční načtení už řeší stránka; nepřidávat druhé souběžné načtení. Seznam v XAML je implementován uživatelem a jeho fungování při spuštění bylo potvrzeno. LoadError a tlačítko pro opakované načtení jsou zobrazené; indikátor IsLoading zatím ne.
 
 ### Detail a navigace
 

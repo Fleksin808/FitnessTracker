@@ -15,7 +15,7 @@ Platí [architektura](architecture.md) a [datové dohody](data-model.md). Stav k
 - [x] Tato úprava prošla sestavením pro Windows.
 - [x] Návrh architektury, dat a pořadí práce je uložen v dokumentaci.
 
-Existuje model `Workout`, úložiště v paměti, formulář a seznam tréninků. Uživatel potvrdil fungování seznamu při spuštění. Detail včetně navigace je implementován a jeho logika automaticky ověřena; praktické ověření přechodů mezi stránkami zůstává otevřené. Trvalé ukládání a spuštění na telefonu zatím nemáme ověřené.
+Existuje model `Workout`, formulář, seznam a detail. Uživatel v chatu „Základní struktura“ potvrdil fungování detailu, návratu i opětovného otevření. Aplikace nyní používá SQLite; trvalost dat je automaticky ověřena mezi dvěma procesy. Praktický restart MAUI aplikace a spuštění na telefonu zůstávají k ověření.
 
 ## 1. MVVM a rozdělení odpovědností
 
@@ -28,7 +28,7 @@ Existuje model `Workout`, úložiště v paměti, formulář a seznam tréninků
 
 Hotovo, když zadání názvu a kontrola prázdného vstupu fungují přes binding a příkaz. Zatím bez databáze.
 
-Kontrola obrazovky: po spuštění je vidět výchozí zpráva; prázdný vstup i samotné mezery vypíšou upozornění; `  Trénink nohou  ` zobrazí `Trénink přidán do paměti: Trénink nohou`; změna názvu a další potvrzení aktualizují výsledek. Ověřit také prázdný vstup po předchozím úspěšném potvrzení.
+Kontrola obrazovky: po spuštění je vidět výchozí zpráva; prázdný vstup i samotné mezery vypíšou upozornění; `  Trénink nohou  ` zobrazí `Trénink uložen: Trénink nohou`; změna názvu a další potvrzení aktualizují výsledek. Ověřit také prázdný vstup po předchozím úspěšném potvrzení.
 
 ## 2. Tréninky v paměti
 
@@ -40,7 +40,7 @@ Kontrola obrazovky: po spuštění je vidět výchozí zpráva; prázdný vstup 
 - [x] Vysvětlit oznamování změn kolekce a sdílenou životnost úložiště.
 - [x] Zobrazit kolekci tréninků v UI pomocí `CollectionView` (implementoval a ověřil uživatel).
 - [x] Přidat detail a vysvětlit navigaci pomocí ID.
-- [ ] Prakticky ověřit otevření detailu, návrat a opakované otevření stejné položky.
+- [x] Prakticky ověřit otevření detailu, návrat a opakované otevření stejné položky (potvrzeno uživatelem v chatu „Základní struktura“).
 
 Hotovo, když lze vytvořit více tréninků a otevřít jejich detaily. Záznamy přežijí navigaci v rámci běhu aplikace; po restartu se ztratí.
 
@@ -48,18 +48,23 @@ Krok 2 dělíme na malé části: nejprve model, potom rozhraní úložiště, j
 
 Příprava seznamu v kroku 2: `WorkoutViewModel.Workouts` je stabilní instance `ObservableCollection<Workout>`. `LoadWorkoutsAsync` načte data a `WorkoutPage.OnAppearing` ji volá při zobrazení stránky. Po přidání se kolekce obnoví. `IsLoading`, `LoadError` a `LoadWorkoutsCommand` jsou připravené pro chat UI; seznam už XAML zobrazuje, zprávu LoadError zatím nikoliv. Ověřeno bylo řazení, obnova, oznámení kolekce, načtení sdílených dat, zachování položek při chybě, odlišení chyby čtení po úspěšném zápisu a blokace souběžných operací. Sestavení pro Windows prošlo bez chyb a upozornění; fungování seznamu následně při spuštění potvrdil uživatel.
 
-Detail v kroku 2: `WorkoutDetailPage` přijme `workoutId` přes `IQueryAttributable` a v `OnAppearing` zavolá `WorkoutDetailViewModel.LoadAsync`. Seznam naviguje přes Shell route a po klepnutí zruší výběr. Detail zobrazuje název a místní čas, řeší neplatné a nenalezené ID, chybu úložiště a opakované načtení. Automatické ověření pokrylo načtení různých ID, oznámení vlastností, převod času, chyby a retry; Windows build prošel bez chyb a upozornění. Prakticky vyzkoušet: přidat dva tréninky, otevřít každý detail, vrátit se šipkou zpět a otevřít znovu stejnou položku. Do té doby není etapa 2 prakticky uzavřená.
+Detail v kroku 2: `WorkoutDetailPage` přijme `workoutId` přes `IQueryAttributable` a v `OnAppearing` zavolá `WorkoutDetailViewModel.LoadAsync`. Seznam naviguje přes Shell route a po klepnutí zruší výběr. Detail zobrazuje název a místní čas, řeší neplatné a nenalezené ID, chybu úložiště a opakované načtení. Automatické ověření pokrylo načtení různých ID, oznámení vlastností, převod času, chyby a retry; Windows build prošel bez chyb a upozornění. Prakticky vyzkoušet: přidat dva tréninky, otevřít každý detail, vrátit se šipkou zpět a otevřít znovu stejnou položku. Uživatel následně potvrdil fungování přechodů a etapa 2 je uzavřená.
 
 ## 3. Lokální SQLite
 
-- [ ] Zvolit knihovnu pro přístup k SQLite a popsat důvody volby.
-- [ ] Zavést databázi v datovém adresáři aplikace a první migraci.
-- [ ] Implementovat SQLite úložiště tréninků a změnit registraci závislostí.
-- [ ] Přidat stav ukládání, zobrazení chyb a ochranu před dvojím odesláním.
-- [ ] Ověřit identifikátory, časy a načtení po restartu.
+- [x] Zvolit `sqlite-net-pcl` 1.11.285 a popsat důvody volby.
+- [x] Zavést databázi v datovém adresáři aplikace a migraci 0 → 1.
+- [x] Implementovat SQLite úložiště tréninků a změnit registraci závislostí.
+- [x] Zachovat stav ukládání a ochranu před dvojím odesláním; zobrazit chybu čtení a opakované načtení.
+- [x] Automaticky ověřit ID, přesný UTC čas, migrace a načtení mezi dvěma samostatnými procesy.
+- [ ] Prakticky ověřit tréninky a detaily po restartu MAUI aplikace.
 - [ ] Ověřit spuštění a ukládání na cílovém telefonu nebo emulátoru.
 
 Hotovo, když tréninky přežijí restart na ověřených platformách a obrazovka neobsahuje databázový kód. Cílovou telefonní platformu a dostupné zařízení určíme před tímto ověřením.
+
+Implementace kroku 3: `FitnessDatabase` otevírá databázi při prvním použití a provádí verzovanou migraci. `WorkoutRow` mapuje textové ID a UTC čas na `Workout.Restore`. `SqliteWorkoutRepository` používá stejné rozhraní jako paměťová varianta. Testy v `tests/FitnessTracker.PersistenceChecks` pokrývají trvalost mezi procesy, pořadí, duplicity, souběh, retry, neúspěšnou migraci, ochranu novější verze a poškozený záznam. Windows build, Android build (mimo omezené prostředí) a integrační ověření prošly. Běh na telefonu ani praktický restart MAUI tím nejsou potvrzené.
+
+Praktická kontrola: přidat dva tréninky, otevřít detail, zavřít aplikaci i ladicí běh, znovu ji spustit a ověřit oba tréninky i jejich detaily. Další přidání musí zachovat starší záznamy.
 
 ## 4. Katalog cviků
 

@@ -144,7 +144,7 @@ public sealed class WorkoutViewModel : INotifyPropertyChanged
             // Obnova seznamu má vlastní ošetření chyby: selhání čtení neznamená selhání zápisu.
             bool refreshed = await RefreshWorkoutsAsync();
             WorkoutResult = refreshed
-                ? $"Trénink přidán do paměti: {workout.Name}"
+                ? $"Trénink uložen: {workout.Name}"
                 : "Trénink byl přidán, ale seznam se nepodařilo obnovit. Zkus načíst seznam znovu.";
         }
         catch (Exception exception)
