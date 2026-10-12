@@ -3,11 +3,12 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:workouts="clr-namespace:FitnessTracker.Features.Workouts"
+             xmlns:models="clr-namespace:FitnessTracker.Domain.Workouts"
              x:Class="FitnessTracker.Features.Workouts.WorkoutPage"
              x:DataType="workouts:WorkoutViewModel"
              Title="Tréninky">
-    <ScrollView>
-        <VerticalStackLayout Padding="24" Spacing="25">
+    <Grid RowDefinitions="Auto,*">
+        <VerticalStackLayout Padding="24" Spacing="25" Grid.Row="0">
             <Label Text="Deník tréninků" Style="{StaticResource Headline}"
                    SemanticProperties.HeadingLevel="Level1" />
             <Label Text="Zadej název svého tréninku." />
@@ -25,5 +26,12 @@
             <!-- Výsledek se přenáší pouze z ViewModelu do zobrazení. -->
             <Label Text="{Binding WorkoutResult, Mode=OneWay}" />
         </VerticalStackLayout>
-    </ScrollView>
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Workouts}" EmptyView="Zatím nemáš žádné tréninky">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Workout">
+                    <Label Text="{Binding Name}" />
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
 </ContentPage>
