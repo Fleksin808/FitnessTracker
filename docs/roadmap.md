@@ -2,7 +2,7 @@
 
 ## Způsob vývoje
 
-Cílem první verze je použitelný lokální deník silových tréninků. Postupujeme v malých dokončených krocích, aby byl kód srozumitelný a každá nová část měla jasný účel.
+Cílem první verze je použitelný lokální deník silových tréninků. Postupujeme po dokončených funkčních celcích s vysvětlením klíčových rozhodnutí a toku dat. Od 12. 10. 2026 nepoužíváme jako výchozí režim úkoly po jednotlivých řádcích; větší části implementujeme podle roadmapy a potom je společně projdeme.
 
 Každý krok zahrnuje vysvětlení návrhu, komentáře u podstatné logiky, praktické ověření a aktualizaci dokumentace. Neimplementujeme více etap najednou bez předchozí dohody.
 
@@ -15,7 +15,7 @@ Platí [architektura](architecture.md) a [datové dohody](data-model.md). Stav k
 - [x] Tato úprava prošla sestavením pro Windows.
 - [x] Návrh architektury, dat a pořadí práce je uložen v dokumentaci.
 
-Existuje základ doménového modelu `Workout` a úložiště v paměti propojené s formulářem. Seznam tréninků na obrazovce a trvalé ukládání dosud nemáme. První krok MVVM je implementován; praktické ověření obrazovky je zatím otevřené. Spuštění na telefonu není dosud ověřené.
+Existuje model `Workout`, úložiště v paměti, formulář a seznam tréninků. Uživatel potvrdil fungování seznamu při spuštění. Detail včetně navigace je implementován a jeho logika automaticky ověřena; praktické ověření přechodů mezi stránkami zůstává otevřené. Trvalé ukládání a spuštění na telefonu zatím nemáme ověřené.
 
 ## 1. MVVM a rozdělení odpovědností
 
@@ -24,7 +24,7 @@ Existuje základ doménového modelu `Workout` a úložiště v paměti propojen
 - [x] Přesunout zpracování vstupu z code-behind do ViewModelu.
 - [x] Zavést předávání a registraci potřebných závislostí.
 - [x] Zdokumentovat volbu vestavěného `Command` a ručního `INotifyPropertyChanged` bez další knihovny.
-- [ ] Prakticky ověřit spuštění stránky, binding a příkaz.
+- [x] Prakticky ověřit spuštění stránky, binding a příkaz (potvrzeno uživatelem).
 
 Hotovo, když zadání názvu a kontrola prázdného vstupu fungují přes binding a příkaz. Zatím bez databáze.
 
@@ -38,14 +38,17 @@ Kontrola obrazovky: po spuštění je vidět výchozí zpráva; prázdný vstup 
 - [x] Propojit formulář s vytvořením a přidáním tréninku; ošetřit chyby a opakované odeslání.
 - [x] Připravit `Workouts`, načítání při otevření stránky a obnovu po přidání.
 - [x] Vysvětlit oznamování změn kolekce a sdílenou životnost úložiště.
-- [ ] Zobrazit kolekci tréninků v UI pomocí `CollectionView` (chat UI).
-- [ ] Přidat detail a vysvětlit navigaci pomocí ID.
+- [x] Zobrazit kolekci tréninků v UI pomocí `CollectionView` (implementoval a ověřil uživatel).
+- [x] Přidat detail a vysvětlit navigaci pomocí ID.
+- [ ] Prakticky ověřit otevření detailu, návrat a opakované otevření stejné položky.
 
 Hotovo, když lze vytvořit více tréninků a otevřít jejich detaily. Záznamy přežijí navigaci v rámci běhu aplikace; po restartu se ztratí.
 
-Krok 2 dělíme na malé části: nejprve model, potom rozhraní úložiště, jeho implementace v paměti a nakonec propojení formuláře se seznamem a detailem. Nyní je připraven model, rozhraní i úložiště v paměti registrované v DI. Formulář vytváří trénink a přidává ho přes rozhraní úložiště. Automaticky bylo ověřeno přidání, aktuální čas, prázdný vstup, blokace opakovaného volání při čekání, synchronní i asynchronní chyba a úspěšné opakování po chybě. Praktické ověření UI zůstává otevřené. Konec tréninku a poznámky doplníme až s funkcemi, které je využijí.
+Krok 2 dělíme na malé části: nejprve model, potom rozhraní úložiště, jeho implementace v paměti a nakonec propojení formuláře se seznamem a detailem. Nyní je připraven model, rozhraní i úložiště v paměti registrované v DI. Formulář vytváří trénink a přidává ho přes rozhraní úložiště. Automaticky bylo ověřeno přidání, aktuální čas, prázdný vstup, blokace opakovaného volání při čekání, synchronní i asynchronní chyba a úspěšné opakování po chybě. Fungování formuláře a seznamu při spuštění potvrdil uživatel. Konec tréninku a poznámky doplníme až s funkcemi, které je využijí.
 
-Příprava seznamu v kroku 2: `WorkoutViewModel.Workouts` je stabilní instance `ObservableCollection<Workout>`. `LoadWorkoutsAsync` načte data a `WorkoutPage.OnAppearing` ji volá při zobrazení stránky. Po přidání se kolekce obnoví. `IsLoading`, `LoadError` a `LoadWorkoutsCommand` jsou připravené pro chat UI; seznam ani chybu načítání zatím XAML nezobrazuje. Ověřeno bylo řazení, obnova, oznámení kolekce, načtení sdílených dat, zachování položek při chybě, odlišení chyby čtení po úspěšném zápisu a blokace souběžných operací. Sestavení pro Windows prošlo bez chyb a upozornění; UI nebylo spuštěno.
+Příprava seznamu v kroku 2: `WorkoutViewModel.Workouts` je stabilní instance `ObservableCollection<Workout>`. `LoadWorkoutsAsync` načte data a `WorkoutPage.OnAppearing` ji volá při zobrazení stránky. Po přidání se kolekce obnoví. `IsLoading`, `LoadError` a `LoadWorkoutsCommand` jsou připravené pro chat UI; seznam už XAML zobrazuje, zprávu LoadError zatím nikoliv. Ověřeno bylo řazení, obnova, oznámení kolekce, načtení sdílených dat, zachování položek při chybě, odlišení chyby čtení po úspěšném zápisu a blokace souběžných operací. Sestavení pro Windows prošlo bez chyb a upozornění; fungování seznamu následně při spuštění potvrdil uživatel.
+
+Detail v kroku 2: `WorkoutDetailPage` přijme `workoutId` přes `IQueryAttributable` a v `OnAppearing` zavolá `WorkoutDetailViewModel.LoadAsync`. Seznam naviguje přes Shell route a po klepnutí zruší výběr. Detail zobrazuje název a místní čas, řeší neplatné a nenalezené ID, chybu úložiště a opakované načtení. Automatické ověření pokrylo načtení různých ID, oznámení vlastností, převod času, chyby a retry; Windows build prošel bez chyb a upozornění. Prakticky vyzkoušet: přidat dva tréninky, otevřít každý detail, vrátit se šipkou zpět a otevřít znovu stejnou položku. Do té doby není etapa 2 prakticky uzavřená.
 
 ## 3. Lokální SQLite
 

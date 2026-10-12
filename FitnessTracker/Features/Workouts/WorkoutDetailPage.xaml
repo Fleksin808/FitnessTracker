@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:workouts="clr-namespace:FitnessTracker.Features.Workouts"
+             x:Class="FitnessTracker.Features.Workouts.WorkoutDetailPage"
+             x:DataType="workouts:WorkoutDetailViewModel"
+             Title="Detail tréninku">
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+            <ActivityIndicator IsRunning="{Binding IsLoading}"
+                               IsVisible="{Binding IsLoading}"
+                               SemanticProperties.Description="Načítání detailu tréninku" />
+
+            <!-- Obsah se zobrazí až po úspěšném načtení; při chybě neukazujeme starý trénink. -->
+            <VerticalStackLayout IsVisible="{Binding HasWorkout}" Spacing="8">
+                <Label Text="{Binding WorkoutName}"
+                       Style="{StaticResource Headline}"
+                       SemanticProperties.HeadingLevel="Level1" />
+                <Label Text="Začátek tréninku" />
+                <Label Text="{Binding StartedAtText}" />
+            </VerticalStackLayout>
+
+            <!-- Chyba je oddělená od stavu načítání a umožňuje opakovat čtení. -->
+            <VerticalStackLayout IsVisible="{Binding HasError}" Spacing="8">
+                <Label Text="{Binding ErrorMessage}" />
+                <Button Text="Znovu načíst" Command="{Binding RetryCommand}" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

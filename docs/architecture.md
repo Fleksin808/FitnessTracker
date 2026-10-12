@@ -109,7 +109,17 @@ Podklady: [compiled bindings](https://learn.microsoft.com/en-us/dotnet/maui/fund
 
 Neúspěšné čtení zachová předchozí kolekci a nastaví `LoadError`; úspěšné opakování chybu odstraní. Pokud se zápis podaří a obnova seznamu selže, výsledná zpráva výslovně potvrzuje zápis a doporučí opakovat načtení. Nesmí uživateli doporučovat znovu přidat stejný trénink.
 
-Kontrakt pro chat UI: `Workouts` slouží jako `ItemsSource`, položka má typ `Workout` s `Name` a `StartedAt` (UTC; zobrazit místně). `IsLoading` řídí indikátor načítání, `LoadError` zprávu o chybě a `LoadWorkoutsCommand` opakované načtení. Počáteční načtení už řeší stránka; nepřidávat druhé souběžné načtení. XAML seznamu zatím není implementován.
+Kontrakt pro chat UI: `Workouts` slouží jako `ItemsSource`, položka má typ `Workout` s `Name` a `StartedAt` (UTC; zobrazit místně). `IsLoading` řídí indikátor načítání, `LoadError` zprávu o chybě a `LoadWorkoutsCommand` opakované načtení. Počáteční načtení už řeší stránka; nepřidávat druhé souběžné načtení. Seznam v XAML je implementován uživatelem a jeho fungování při spuštění bylo potvrzeno. Indikátor IsLoading a zpráva LoadError na hlavní stránce zatím nejsou zobrazené.
+
+### Detail a navigace
+
+`WorkoutDetailViewModel` navazuje na původní uživatelský kód. Vlastnost `Workout` má vlastní setter, který vyvolává `PropertyChanged` i pro odvozené vlastnosti `HasWorkout`, `WorkoutName` a `StartedAtText`. Čas se převádí do místního pásma pouze pro zobrazení. `LoadAsync` řeší prázdné a nenalezené ID odděleně od chyby úložiště. `finally` obnoví `IsLoading`; `RetryCommand` znovu načte poslední platné ID. Při novém načtení se starý detail vyčistí.
+
+`WorkoutDetailPage` přijímá parametr `workoutId` přes `IQueryAttributable`, převede ho na `Guid` a v `OnAppearing` předá ViewModelu. Shell route registruje `AppShell`. Detailní stránka i její ViewModel jsou transient; repository zůstává singleton. Předává se jen ID, data načítá repository. Používáme běžnou route s query parametrem podporovanou v MAUI 10.
+
+`WorkoutPage` obsluhuje výběr položky a navigaci v code-behind. Jde o navigační chování stránky; není zde ukládání ani doménová logika. Výběr se vyčistí, aby stejná položka šla po návratu znovu otevřít. Příznak `isNavigating` blokuje více souběžných přechodů. Výjimky při navigaci se logují a zobrazí se krátká zpráva. Při návratu seznam znovu načte sdílená data. Shell poskytne standardní navigaci zpět.
+
+Podklady: [Shell navigace a parametry](https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/shell/navigation?view=net-maui-10.0), [výběr v CollectionView](https://learn.microsoft.com/en-us/dotnet/maui/user-interface/controls/collectionview/selection?view=net-maui-10.0).
 
 ## Přidání modulu
 

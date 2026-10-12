@@ -31,6 +31,9 @@ namespace FitnessTracker
             // DI podle konstruktorů sestaví AppShell → WorkoutPage → WorkoutViewModel.
             builder.Services.AddTransient<WorkoutViewModel>();
             builder.Services.AddTransient<WorkoutPage>();
+            // Každé otevření detailu dostane vlastní stav; repository zůstává sdílené.
+            builder.Services.AddTransient<WorkoutDetailViewModel>();
+            builder.Services.AddTransient<WorkoutDetailPage>();
             builder.Services.AddTransient<AppShell>();
 
             return builder.Build();

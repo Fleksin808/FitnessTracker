@@ -26,7 +26,9 @@
             <!-- Výsledek se přenáší pouze z ViewModelu do zobrazení. -->
             <Label Text="{Binding WorkoutResult, Mode=OneWay}" />
         </VerticalStackLayout>
-        <CollectionView Grid.Row="1" ItemsSource="{Binding Workouts}" EmptyView="Zatím nemáš žádné tréninky">
+        <!-- Jednoduchý výběr předá navigaci ID tréninku; po otevření se výběr vyčistí. -->
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Workouts}" EmptyView="Zatím nemáš žádné tréninky"
+                        SelectionMode="Single" SelectionChanged="OnWorkoutSelectionChanged">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:Workout">
                     <Label Text="{Binding Name}" />
