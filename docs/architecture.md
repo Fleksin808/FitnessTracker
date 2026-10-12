@@ -163,6 +163,12 @@ Zřejmé příkazy nepopisujeme mechanicky. Komentáře aktualizujeme spolu s k�
 
 Každý krok má malé změny, vysvětlení toku dat a praktické ověření. Automatické testy se soustředí na pravidla, datové převody, migrace a import; nebudujeme test pro každý triviální řádek UI.
 
+## Report pro git commit
+
+Po každém dokončeném celku úprav (kódu, konfigurace i dokumentace) připravíme v závěrečné odpovědi krátký český report vhodný ke zkopírování jako zpráva git commitu. Pravidlo platí pro všechny chaty projektu FitnessTracker.
+
+Report má stručný název, několik bodů s provedenými změnami a řádek `Ověřeno:` se skutečně provedenými kontrolami. Neprovedené kontroly nepovažujeme za úspěšné; podstatné zbývající ověření uvedeme výslovně. Při čistém vysvětlování bez úpravy souborů report není potřeba. Příprava reportu sama o sobě není pokyn k provedení commitu nebo pushnutí změn.
+
 ## Dokumentace rozhodnutí
 
 - [Datový model](data-model.md) určuje význam a ukládání dat.
