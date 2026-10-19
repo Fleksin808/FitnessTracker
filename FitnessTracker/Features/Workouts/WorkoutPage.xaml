@@ -8,7 +8,7 @@
              x:DataType="workouts:WorkoutViewModel"
              Title="Tréninky">
     <Grid RowDefinitions="Auto,*">
-        <VerticalStackLayout Padding="24" Spacing="25" Grid.Row="0">
+        <VerticalStackLayout Padding="24" Spacing="12" Grid.Row="0">
             <Label Text="Deník tréninků" Style="{StaticResource Headline}"
                    SemanticProperties.HeadingLevel="Level1" />
             <Label Text="Zadej název svého tréninku." />
@@ -17,8 +17,7 @@
                    Placeholder="Například: Trénink nohou"
                    SemanticProperties.Description="Název tréninku" />
             <!-- Příkaz nahrazuje obsluhu události Clicked v code-behind. -->
-            <Button Text="Potvrdit trénink" Command="{Binding ConfirmWorkoutCommand}"
-                    HorizontalOptions="Fill" />
+            <Button Text="Potvrdit trénink" Command="{Binding ConfirmWorkoutCommand}" />
             <!-- Indikátor sleduje skutečný stav operace ve ViewModelu. -->
             <ActivityIndicator IsRunning="{Binding IsSaving}"
                                IsVisible="{Binding IsSaving}"

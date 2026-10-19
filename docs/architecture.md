@@ -190,6 +190,10 @@ Zřejmé příkazy nepopisujeme mechanicky. Komentáře aktualizujeme spolu s k�
 
 Každý krok má malé změny, vysvětlení toku dat a praktické ověření. Automatické testy se soustředí na pravidla, datové převody, migrace a import; nebudujeme test pro každý triviální řádek UI.
 
+## Dočasné sjednocení tlačítek
+
+Vzhled zatím upravujeme jen pro základní použitelnost, při zachování pořadí funkcí v roadmapě. Sdílený styl `Button` v `Resources/Styles/Styles.xaml` používá odsazení `16,8`, minimální výšku 44, minimální šířku 100, maximální šířku 320 a zarovnání vlevo. Výška není pevná, aby se mohla přizpůsobit textu. Hlavní formulář používá rozestupy 12. Příkazy, bindingy a datová logika se tím nemění. Komplexní návrh UI zůstává odložený do dokončení základní funkčnosti.
+
 ## Report pro git commit
 
 Po každém dokončeném celku úprav (kódu, konfigurace i dokumentace) připravíme v závěrečné odpovědi krátký český report vhodný ke zkopírování jako zpráva git commitu. Pravidlo platí pro všechny chaty projektu FitnessTracker.
