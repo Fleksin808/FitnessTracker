@@ -6,7 +6,7 @@ namespace FitnessTracker.Infrastructure.Persistence;
 public sealed class FitnessDatabase
 {
     public const string FileName = "fitness-tracker.db3";
-    private const int CurrentSchemaVersion = 2;
+    private const int CurrentSchemaVersion = 3;
     private readonly SQLiteAsyncConnection connection;
     private readonly SemaphoreSlim initializationGate = new(1, 1);
     private bool initialized;
@@ -62,6 +62,34 @@ public sealed class FitnessDatabase
                             )
                             """);
                         database.Execute("PRAGMA user_version = 2");
+                        version = 2;
+                    }
+
+                    if (version == 2)
+                    {
+                        // Migrace 2 → 3 zachová existující tréninky a katalog a přidá jejich návaznosti.
+                        database.Execute("ALTER TABLE Workouts ADD COLUMN FinishedAt TEXT NULL CHECK (FinishedAt IS NULL OR FinishedAt >= StartedAt)");
+                        database.Execute("""
+                            CREATE TABLE WorkoutExercises (
+                                Id TEXT NOT NULL PRIMARY KEY,
+                                WorkoutId TEXT NOT NULL REFERENCES Workouts(Id) ON DELETE CASCADE,
+                                ExerciseId TEXT NOT NULL REFERENCES Exercises(Id) ON DELETE RESTRICT,
+                                ExerciseNameSnapshot TEXT NOT NULL CHECK (length(trim(ExerciseNameSnapshot)) > 0),
+                                Position INTEGER NOT NULL CHECK (Position > 0),
+                                UNIQUE (WorkoutId, Position)
+                            )
+                            """);
+                        database.Execute("""
+                            CREATE TABLE WorkoutSets (
+                                Id TEXT NOT NULL PRIMARY KEY,
+                                WorkoutExerciseId TEXT NOT NULL REFERENCES WorkoutExercises(Id) ON DELETE CASCADE,
+                                Position INTEGER NOT NULL CHECK (Position > 0),
+                                Repetitions INTEGER NOT NULL CHECK (Repetitions > 0),
+                                LoadGrams INTEGER NULL CHECK (LoadGrams IS NULL OR LoadGrams >= 0),
+                                UNIQUE (WorkoutExerciseId, Position)
+                            )
+                            """);
+                        database.Execute("PRAGMA user_version = 3");
                     }
                 }).ConfigureAwait(false);
 

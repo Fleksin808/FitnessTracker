@@ -25,8 +25,8 @@ public sealed class SqliteWorkoutRepository : IWorkoutRepository
                 throw new InvalidOperationException("Trénink se stejným ID už existuje.");
 
             // Parametry oddělují hodnoty od SQL, takže apostrofy v názvu nejsou příkaz.
-            transaction.Execute("INSERT INTO Workouts (Id, Name, StartedAt) VALUES (?, ?, ?)",
-                row.Id, row.Name, row.StartedAt);
+            transaction.Execute("INSERT INTO Workouts (Id, Name, StartedAt, FinishedAt) VALUES (?, ?, ?, ?)",
+                row.Id, row.Name, row.StartedAt, row.FinishedAt);
         }).ConfigureAwait(false);
     }
 
@@ -34,7 +34,7 @@ public sealed class SqliteWorkoutRepository : IWorkoutRepository
     {
         var connection = await database.GetConnectionAsync().ConfigureAwait(false);
         var rows = await connection.QueryAsync<WorkoutRow>(
-            "SELECT Id, Name, StartedAt FROM Workouts").ConfigureAwait(false);
+            "SELECT Id, Name, StartedAt, FinishedAt FROM Workouts").ConfigureAwait(false);
 
         // Doménové typy řadíme stejným porovnáním jako úložiště v paměti.
         // Vracíme samostatný snímek pouze pro čtení.
@@ -49,7 +49,7 @@ public sealed class SqliteWorkoutRepository : IWorkoutRepository
     {
         var connection = await database.GetConnectionAsync().ConfigureAwait(false);
         var rows = await connection.QueryAsync<WorkoutRow>(
-            "SELECT Id, Name, StartedAt FROM Workouts WHERE Id = ?", id.ToString("D"))
+            "SELECT Id, Name, StartedAt, FinishedAt FROM Workouts WHERE Id = ?", id.ToString("D"))
             .ConfigureAwait(false);
 
         return rows.Count == 0 ? null : rows[0].ToWorkout();

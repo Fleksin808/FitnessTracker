@@ -5,12 +5,13 @@ public partial class WorkoutDetailPage : ContentPage, IQueryAttributable
     public const string Route = nameof(WorkoutDetailPage);
     public const string WorkoutIdParameter = "workoutId";
     private readonly WorkoutDetailViewModel viewModel;
+    public WorkoutDetailViewModel ViewModel => viewModel;
     private Guid workoutId;
 
     public WorkoutDetailPage(WorkoutDetailViewModel viewModel)
     {
-        InitializeComponent();
         this.viewModel = viewModel;
+        InitializeComponent();
         BindingContext = viewModel;
     }
 

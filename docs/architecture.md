@@ -95,7 +95,7 @@ Původní registrace `AddSingleton<IWorkoutRepository, InMemoryWorkoutRepository
 Používáme `sqlite-net-pcl` ve verzi `1.11.285`. Je to lehká knihovna s asynchronním API, kterou používá také oficiální příklad MAUI. Nepotřebujeme další ORM ani SQL ve ViewModelech. Verzi máme připnutou v projektu aplikace i integračního ověření.
 
 - `FitnessDatabase` dostane cestu z `MauiProgram` a vytváří sdílené připojení. Databáze se otevře při první operaci. `SemaphoreSlim` chrání inicializaci před souběhem a `finally` vždy uvolní čekající volání. `FullMutex` zajistí bezpečný režim připojení pro asynchronní API knihovny.
-- Inicializace zapne cizí klíče a v transakci provede chybějící migrace do aktuální verze 2: `0 → 1` vytváří tréninky, `1 → 2` přidává katalog cviků. Verzi eviduje `PRAGMA user_version`. Chyba neoznačí inicializaci za dokončenou a umožní další pokus. Novější verze se odmítne; data se nemažou ani neresetují.
+- Inicializace zapne cizí klíče a v transakci provede chybějící migrace do aktuální verze 3: `0 → 1` vytváří tréninky, `1 → 2` přidává katalog cviků, `2 → 3` záznam cviků, sérií a konec tréninku. Verzi eviduje `PRAGMA user_version`. Chyba neoznačí inicializaci za dokončenou a umožní další pokus. Novější verze se odmítne; data se nemažou ani neresetují.
 - `WorkoutRow` reprezentuje databázové sloupce a převádí `Guid` a UTC čas na text. Pouze tento záznam má atribut SQLite a veřejné settery pro mapování. `Workout` nemá závislost na knihovně.
 - `SqliteWorkoutRepository` implementuje stejné rozhraní jako paměťová varianta. Přidání kontroluje ID a zapisuje v jedné transakci pomocí parametrů. Čtení mapuje záznamy přes `Workout.Restore` a vrací seřazený snímek pouze pro čtení. Poškozený záznam vyvolá chybu.
 - `MauiProgram` registruje databázi i repository jako singleton a předává cestu `Path.Combine(FileSystem.AppDataDirectory, FitnessDatabase.FileName)`. Připojení patří celému běhu aplikace. Záloha a výměna databázového souboru budou později vyžadovat koordinované uzavření připojení.
@@ -139,6 +139,17 @@ Kontrakt pro chat UI: `Workouts` slouží jako `ItemsSource`, položka má typ `
 Podklady: [Shell navigace a parametry](https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/shell/navigation?view=net-maui-10.0), [výběr v CollectionView](https://learn.microsoft.com/en-us/dotnet/maui/user-interface/controls/collectionview/selection?view=net-maui-10.0).
 
 ## Přidání modulu
+
+### Záznam tréninku v kroku 5
+
+- `WorkoutExercise` a `WorkoutSet` jsou neměnné doménové záznamy s pravidly pro ID, pořadí, opakování a zátěž. `WorkoutLog` a `WorkoutExerciseLog` tvoří konzistentní snímek pro detail.
+- `IWorkoutRepository` nadále slouží základnímu seznamu tréninků. `IWorkoutLogRepository` přidává operace záznamu: načtení celku, přidání cviku, série, přesuny a ukončení. `SqliteWorkoutLogRepository` sdílí `FitnessDatabase` a chrání návaznosti i otevřený stav transakcemi.
+- `WorkoutDetailViewModel` dostává rozhraní záznamu a katalogu. Načítá aktivní nabídku, parsuje vstup podle kultury zařízení a blokuje souběžné operace. `needsReload` po úspěšném zápisu blokuje další zápis, dokud se nepodaří načíst čerstvý snímek. Chyba obnovy se odlišuje od chyby zápisu.
+- `WorkoutExerciseItem` a `WorkoutSetItem` jsou prezentační obálky pro popisky a převod gramů na kg. Katalogový výběr používá `Exercise`, výběr pro sérii konkrétní `WorkoutExerciseItem`, takže opakovaný výskyt téhož cviku má vlastní série.
+- Detail poskytuje funkční ovládání pro výběr cviku, přidání série, posun cviků a sérií a ukončení. Po ukončení je záznam čitelný a příkazy zápisu zakázané. Vizuální úpravy odkládáme podle přání uživatele.
+- Přejmenování a archivace katalogu zůstávají nezávislé na zaznamenaném názvu. Cizí klíče chrání existující historii; fyzické mazání v produktu přijde později.
+
+Automatické ověření zahrnuje přesnost a null/0, změny katalogu, souběh, rollback přesunu i migrace, cizí klíče, kaskády a záznam mezi procesy. ViewModel byl ověřen se skutečnou SQLite databází včetně kultur cs-CZ/en-US, neplatného vstupu, přetečení, retry a blokace zápisu po ukončení. Praktické ověření nového detailu v MAUI zůstává otevřené.
 
 ### Katalog cviků v kroku 4
 

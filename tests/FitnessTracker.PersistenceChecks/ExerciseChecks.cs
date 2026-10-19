@@ -70,8 +70,8 @@ internal static class ExerciseChecks
         var workout = await new SqliteWorkoutRepository(upgraded).GetByIdAsync(Guid.Parse(workoutId));
         Check(workout?.Name == "Původní trénink" && workout.StartedAt.ToString("O", CultureInfo.InvariantCulture) == time,
             "Migrace 1 → 2 změnila původní trénink.");
-        Check(await (await upgraded.GetConnectionAsync()).ExecuteScalarAsync<int>("PRAGMA user_version") == 2,
-            "Upgrade neuložil verzi 2.");
+        Check(await (await upgraded.GetConnectionAsync()).ExecuteScalarAsync<int>("PRAGMA user_version") == 3,
+            "Upgrade neuložil aktuální verzi 3.");
 
         // Konflikt v migraci 2 musí zachovat verzi 1 a všechna její data.
         string conflictPath = Path.Combine(directory, "migration2-failure.db3");

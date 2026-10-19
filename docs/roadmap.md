@@ -15,7 +15,7 @@ Platí [architektura](architecture.md) a [datové dohody](data-model.md). Stav k
 - [x] Tato úprava prošla sestavením pro Windows.
 - [x] Návrh architektury, dat a pořadí práce je uložen v dokumentaci.
 
-Existuje model `Workout`, formulář, seznam a detail. Uživatel v chatu „Základní struktura“ potvrdil fungování detailu, návratu i opětovného otevření. Aplikace nyní používá SQLite; trvalost dat je automaticky ověřena mezi dvěma procesy. Zachování záznamů po restartu MAUI uživatel potvrdil. Telefon a kontrola detailů po restartu zůstávají otevřené. Katalog cviků je nyní implementovaný; čeká na ruční ověření nové obrazovky.
+Existuje model `Workout`, formulář, seznam a detail. Uživatel v chatu „Základní struktura“ potvrdil fungování detailu, návratu i opětovného otevření. Aplikace nyní používá SQLite; trvalost dat je automaticky ověřena mezi dvěma procesy. Zachování záznamů po restartu MAUI uživatel potvrdil. Telefon a kontrola detailů po restartu zůstávají otevřené. Funkčnost katalogu cviků uživatel potvrdil. Záznam cviků a sérií v tréninku je nyní implementovaný a automaticky ověřený; nová část detailu čeká na ruční kontrolu.
 
 ## 1. MVVM a rozdělení odpovědností
 
@@ -73,24 +73,30 @@ Praktická kontrola: přidat dva tréninky, otevřít detail, zavřít aplikaci 
 - [x] Zavést migraci 1 → 2 a sekci Cviky se seznamem a editorem pro vytvoření i úpravy.
 - [x] Umožnit vratnou archivaci a výchozí skrytí archivovaných cviků; fyzické smazání nenabízet.
 - [x] Automaticky ověřit názvy, ID, přejmenování, archivaci, filtr, chybové stavy a migraci.
-- [ ] Prakticky ověřit sekci Cviky včetně restartu a přepínání zpět na tréninky.
+- [x] Prakticky ověřit funkčnost katalogu cviků (potvrzeno uživatelem).
+- [ ] Samostatně ověřit zachování archivace po restartu a návrat do tréninků.
 
 Hotovo, když lze katalog spravovat a archivované cviky se běžně nenabízejí pro nový trénink.
 
-Implementace kroku 4: katalog má vlastní model, rozhraní, SQLite repository a ViewModel. V sekci Cviky lze přidat a upravit název, zrušit editaci, archivovat a znovu obnovit cvik. Výchozí seznam archiv skrývá, tlačítko umožní zobrazit ho. Migrace 1 → 2 zachová původní tréninky. Přejmenování a archivace nemění ID. Automaticky prošly databázové testy i ověření ViewModelu (validace, příkazy, souběh, chyby zápisu/čtení, rollback filtru a retry); Windows i Android build prošly bez chyb a upozornění. Praktické ověření nového UI zatím chybí.
+Implementace kroku 4: katalog má vlastní model, rozhraní, SQLite repository a ViewModel. V sekci Cviky lze přidat a upravit název, zrušit editaci, archivovat a znovu obnovit cvik. Výchozí seznam archiv skrývá, tlačítko umožní zobrazit ho. Migrace 1 → 2 zachová původní tréninky. Přejmenování a archivace nemění ID. Automaticky prošly databázové testy i ověření ViewModelu (validace, příkazy, souběh, chyby zápisu/čtení, rollback filtru a retry); Windows i Android build prošly bez chyb a upozornění. Funkčnost katalogu uživatel potvrdil; vzhled nyní záměrně neřešíme.
 
 Ruční kontrola: otevřít Cviky, vytvořit dva cviky, jeden přejmenovat, zkusit prázdný název a zrušení úpravy, jeden archivovat, zobrazit archiv a obnovit. Po restartu ověřit názvy a archivaci a zkontrolovat i původní seznam a detail tréninku. Přidávání cviků do tréninku je až krok 5.
 
 ## 5. Zapisování skutečného tréninku
 
-- [ ] Přidat `WorkoutExercise` a `WorkoutSet` včetně migrace.
-- [ ] Umožnit výběr cviku a zadání sérií, opakování a zátěže.
-- [ ] Zavést kopii názvu cviku, převod kilogramů na gramy a validaci.
-- [ ] Umožnit přeuspořádání cviků a sérií.
-- [ ] Přidat ukončení tréninku.
-- [ ] Ověřit transakce a návaznosti záznamů.
+- [x] Přidat `WorkoutExercise`, `WorkoutSet`, snímek celého tréninku a migraci 2 → 3.
+- [x] Umožnit výběr aktivního cviku a zápis sérií, opakování a zátěže v kg.
+- [x] Zavést kopii názvu, přesný převod kg/gramy, null/0 a validaci podle kultury.
+- [x] Umožnit atomické přesuny cviků a sérií o jednu pozici.
+- [x] Přidat ukončení tréninku a ochranu před dalším zápisem.
+- [x] Automaticky ověřit transakce, pořadí, návaznosti, migrace a záznam mezi procesy.
+- [ ] Prakticky ověřit nový detail s cviky, sériemi, přesuny, ukončením a restartem.
 
 Hotovo, když lze zaznamenat celý trénink, znovu ho načíst a jeho údaje zůstávají správné i po přejmenování definice cviku.
+
+Implementace kroku 5: detail používá `IWorkoutLogRepository`, načítá konzistentní snímek a aktivní katalog. SQLite drží kopii názvu a celé gramy. Přesuny používají dočasnou volnou pozici v transakci, po ukončení repository odmítá další změny. UI řídí stejné pravidlo a brání souběhu. Po úspěšném zápisu a chybě obnovy se další zápis blokuje do opětovného načtení. Windows a Android build i datové testy prošly, stejně jako ověření ViewModelu se skutečnou SQLite databází. Vzhled je záměrně bez redesignu.
+
+Ruční kontrola: otevřít rozpracovaný trénink, přidat dva cviky a jednomu více sérií (např. 8 opakování, 62,5 kg; prázdná zátěž; nula). Přesunout cvik i sérii, zkusit neplatný vstup, restartovat aplikaci a ověřit data. Přejmenování a archivace katalogového cviku nesmí přepsat zaznamenaný název. Ukončit trénink a ověřit, že záznam zůstává čitelný a další přidání není dostupné. U zařízení s anglickou kulturou použít desetinnou tečku.
 
 ## 6. Historie a úpravy
 

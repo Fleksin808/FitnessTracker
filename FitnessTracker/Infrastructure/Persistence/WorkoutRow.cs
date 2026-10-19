@@ -12,13 +12,15 @@ internal sealed class WorkoutRow
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string StartedAt { get; set; } = string.Empty;
+    public string? FinishedAt { get; set; }
 
     public static WorkoutRow FromWorkout(Workout workout) => new()
     {
         Id = workout.Id.ToString("D"),
         Name = workout.Name,
         // Pevný UTC formát nezávisí na jazyce telefonu a zachová přesnost času.
-        StartedAt = workout.StartedAt.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)
+        StartedAt = workout.StartedAt.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture),
+        FinishedAt = workout.FinishedAt?.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)
     };
 
     public Workout ToWorkout()
@@ -27,6 +29,7 @@ internal sealed class WorkoutRow
         return Workout.Restore(
             Guid.ParseExact(Id, "D"),
             Name,
-            DateTimeOffset.ParseExact(StartedAt, "O", CultureInfo.InvariantCulture));
+            DateTimeOffset.ParseExact(StartedAt, "O", CultureInfo.InvariantCulture),
+            FinishedAt is null ? null : DateTimeOffset.ParseExact(FinishedAt, "O", CultureInfo.InvariantCulture));
     }
 }

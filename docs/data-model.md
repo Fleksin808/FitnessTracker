@@ -2,7 +2,7 @@
 
 ## Stav a rozsah
 
-Toto je návrh první verze deníku silových tréninků. Implementovány jsou `Workout` (formulář, seznam a detail) a `Exercise` (katalog s přidáním, přejmenováním a archivací). SQLite schéma verze 2 obsahuje tabulky `Workouts` a `Exercises`. Propojení cviků s konkrétním tréninkem a série přidáme v kroku 5 [roadmapy](roadmap.md).
+Toto je návrh první verze deníku silových tréninků. Implementovány jsou tréninky, katalog cviků a záznam cviků a sérií v tréninku. SQLite schéma verze 3 obsahuje `Workouts`, `Exercises`, `WorkoutExercises` a `WorkoutSets`. Trénink lze ukončit; následné úpravy historie přidáme v kroku 6 [roadmapy](roadmap.md).
 
 Aplikace ukládá hlavní data lokálně do SQLite. Databázový soubor `fitness-tracker.db3` je v datovém adresáři aplikace získaném přes MAUI `FileSystem.AppDataDirectory`, nikoliv pomocí pevné cesty na Windows nebo Androidu. Vytváří se při první práci s úložištěm. Běžné zavření aplikace soubor zachová; odinstalace nebo vymazání dat aplikace může data odstranit. Dosavadní čistě paměťové záznamy nejsou zdrojem pro automatickou migraci.
 
@@ -23,7 +23,7 @@ Stejný cvik se může objevit ve více trénincích i vícekrát v jednom trén
 
 ### Workout
 
-Konstruktor `Workout(string name, DateTimeOffset startedAt)` vytvoří nové ID, odmítne prázdný název, odstraní jeho okrajové mezery a převede předaný čas do UTC. `Workout.Restore(Guid id, string name, DateTimeOffset startedAt)` zachová existující ID a použije stejnou validaci. Prázdné ID není platné. Vlastnosti mají zatím pouze getter, aby nebylo možné obejít kontrolu dodatečným přiřazením. Změnu názvu navrhneme při příslušné operaci. `FinishedAt` a `Notes` v tabulce níže jsou plánovaná pole.
+Konstruktor `Workout(string name, DateTimeOffset startedAt)` vytvoří nové ID, odmítne prázdný název, odstraní jeho okrajové mezery a převede předaný čas do UTC. `Workout.Restore` přijímá ID, název, začátek a volitelný konec. `Finish` vrátí ukončenou verzi stejného tréninku a ověří, že konec nepředchází začátku. Opakované ukončení zachová původní konec. Prázdné ID není platné. Vlastnosti mají pouze getter. Změnu názvu navrhneme při příslušné operaci; `Notes` je zatím plánované pole.
 
 | Pole | Typ v C# | Význam |
 | --- | --- | --- |
@@ -103,6 +103,16 @@ V rozhraní zadává uživatel kilogramy. Převod používá `decimal`: `62,5 kg
 
 ## Verze databáze a migrace
 
+### Záznam tréninku a pravidla zápisu
+
+`IWorkoutLogRepository` načítá celý trénink jako neměnný `WorkoutLog` s kolekcí `WorkoutExerciseLog` a sériemi. Čtení všech částí probíhá v jedné transakci. `WorkoutExercise` obsahuje odkaz do katalogu i kopii názvu z okamžiku přidání. Stejný katalogový cvik lze přidat vícekrát; každý výskyt má vlastní ID a série.
+
+Přidat lze jen aktivní cvik z katalogu, což repository zkontroluje ve stejné transakci jako zápis. Následné přejmenování či archivace definice neovlivňuje historický název a nebrání zapisovat série k již přidanému výskytu. Ukončený trénink je v této etapě pouze pro čtení. Kontrola ukončení je v repository, nikoliv jen v tlačítkách UI.
+
+Přidávání používá další pozici v rámci vlastníka. Přesun má směr -1 nebo 1; za okrajem je beze změny. Prohození používá dočasnou volnou kladnou pozici, takže neporušuje UNIQUE ani CHECK během operace. Celý přesun je transakce a při chybě se vrátí zpět.
+
+Zátěž se zadává v kg podle kultury zařízení. Formulář odmítá oddělovače tisíců, záporné hodnoty, přetečení a přesnost menší než gram. Prázdné pole uloží null, explicitní nula uloží 0 gramů. Zobrazení zpět do kg patří prezentační vrstvě.
+
 ### Verze 1: tréninky
 
 Migrace `0 → 1` vytváří tabulku:
@@ -122,7 +132,7 @@ Příklad uloženého času: `2026-10-13T16:30:00.1234567+00:00`. Při čtení p
 
 První verze neobsahuje cizí klíče mezi tabulkami, protože existuje jen `Workouts`; jejich vynucování je už zapnuté na připojení pro budoucí migrace. Neznámou tabulku ve schématu verze 0 nepřepisujeme pomocí `IF NOT EXISTS`: konflikt migraci zastaví a zachová původní stav.
 
-### Verze 2: katalog cviků (aktuální)
+### Verze 2: katalog cviků
 
 Migrace `1 → 2` přidává:
 
@@ -136,6 +146,32 @@ PRAGMA user_version = 2;
 ```
 
 Tabulka `Workouts` a její záznamy se nemění. Nová databáze projde migracemi `0 → 1 → 2` v jedné transakci, starší databáze verze 1 provede pouze druhou migraci. Chyba migrace zachová předchozí verzi i data. Cizí klíče mezi tréninky a katalogem přidáme s `WorkoutExercise`; současné tabulky ještě nemají vzájemný vztah.
+
+### Verze 3: záznam cviků a sérií (aktuální)
+
+Migrace `2 → 3` přidává nullable sloupec `Workouts.FinishedAt` ve stejném UTC formátu jako začátek a tabulky:
+
+```sql
+CREATE TABLE WorkoutExercises (
+    Id TEXT NOT NULL PRIMARY KEY,
+    WorkoutId TEXT NOT NULL REFERENCES Workouts(Id) ON DELETE CASCADE,
+    ExerciseId TEXT NOT NULL REFERENCES Exercises(Id) ON DELETE RESTRICT,
+    ExerciseNameSnapshot TEXT NOT NULL CHECK (length(trim(ExerciseNameSnapshot)) > 0),
+    Position INTEGER NOT NULL CHECK (Position > 0),
+    UNIQUE (WorkoutId, Position)
+);
+CREATE TABLE WorkoutSets (
+    Id TEXT NOT NULL PRIMARY KEY,
+    WorkoutExerciseId TEXT NOT NULL REFERENCES WorkoutExercises(Id) ON DELETE CASCADE,
+    Position INTEGER NOT NULL CHECK (Position > 0),
+    Repetitions INTEGER NOT NULL CHECK (Repetitions > 0),
+    LoadGrams INTEGER NULL CHECK (LoadGrams IS NULL OR LoadGrams >= 0),
+    UNIQUE (WorkoutExerciseId, Position)
+);
+PRAGMA user_version = 3;
+```
+
+Původní tréninky mají `FinishedAt = null`, katalog a jeho archivace zůstávají zachované. Přidání sloupce, obou tabulek a změna verze probíhají atomicky. CHECK konce vyžaduje null nebo konec nejdříve v okamžiku začátku; porovnává pevný UTC formát textu. Mazání tréninku má připravené kaskády, katalogový cvik používaný v historii nelze smazat. Produktové mazání přidáme v kroku 6.
 
 ### Pravidla dalších migrací
 

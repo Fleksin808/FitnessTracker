@@ -20,6 +20,11 @@ if (args.Length == 2 && args[0] is "write" or "read")
         await childRepository.AddAsync(Workout.Restore(persistedId, persistedName, persistedTime));
         var exercises = new SqliteExerciseRepository(childDatabase);
         await exercises.AddAsync(Exercise.Restore(persistedId, "Původní název cviku", false));
+        var recording = new SqliteWorkoutLogRepository(childDatabase);
+        await recording.AddExerciseAsync(persistedId, persistedId);
+        var entry = (await recording.GetAsync(persistedId))!.Exercises.Single().Exercise;
+        await recording.AddSetAsync(entry.Id, 8, 62500);
+        await recording.FinishAsync(persistedId, persistedTime.AddHours(1));
         await exercises.UpdateAsync(Exercise.Restore(persistedId, persistedName, true));
     }
     else
@@ -35,6 +40,11 @@ if (args.Length == 2 && args[0] is "write" or "read")
             "Po restartu se změnil název nebo archivace cviku.");
         Check((await exercises.GetAllAsync()).Count == 0 && (await exercises.GetAllAsync(true)).Count == 1,
             "Po restartu nefunguje filtr archivovaných cviků.");
+        var recording = await new SqliteWorkoutLogRepository(childDatabase).GetAsync(persistedId);
+        Check(recording!.Workout.FinishedAt == persistedTime.AddHours(1)
+            && recording.Exercises.Single().Exercise.ExerciseNameSnapshot == "Původní název cviku"
+            && recording.Exercises.Single().Sets.Single().LoadGrams == 62500,
+            "Po restartu se změnil zaznamenaný cvik, série nebo konec tréninku.");
     }
     SQLiteAsyncConnection.ResetPool();
     return;
@@ -50,7 +60,7 @@ try
     var repository = new SqliteWorkoutRepository(database);
     Check((await repository.GetAllAsync()).Count == 0, "Nová databáze není prázdná.");
     var connection = await database.GetConnectionAsync();
-    Check(await connection.ExecuteScalarAsync<int>("PRAGMA user_version") == 2, "Chybí migrace 2.");
+    Check(await connection.ExecuteScalarAsync<int>("PRAGMA user_version") == 3, "Chybí migrace 3.");
     Check(await connection.ExecuteScalarAsync<int>("PRAGMA foreign_keys") == 1, "Cizí klíče nejsou zapnuté.");
 
     var oldest = new Workout("  Starší trénink  ", persistedTime.AddDays(-1));
@@ -132,13 +142,14 @@ try
     string corruptPath = Path.Combine(directory, "corrupt-row.db3");
     var corruptDatabase = new FitnessDatabase(corruptPath);
     var corruptConnection = await corruptDatabase.GetConnectionAsync();
-    await corruptConnection.ExecuteAsync("INSERT INTO Workouts VALUES (?, ?, ?)", persistedId.ToString("D"), "Chybný čas", "not-a-date");
+    await corruptConnection.ExecuteAsync("INSERT INTO Workouts (Id, Name, StartedAt) VALUES (?, ?, ?)", persistedId.ToString("D"), "Chybný čas", "not-a-date");
     await ExpectAsync<FormatException>(async () => { await new SqliteWorkoutRepository(corruptDatabase).GetByIdAsync(persistedId); });
 
     string processPath = Path.Combine(directory, "restart.db3");
     await RunChildAsync("write", processPath);
     await RunChildAsync("read", processPath);
     await ExerciseChecks.RunAsync(directory);
+    await WorkoutLogChecks.RunAsync(directory);
     Console.WriteLine("PASS: migrace, ID, Unicode/SQL parametry, přesný UTC čas, řazení, snapshot, duplicity, souběh, opětovné otevření, restart procesu, novější verze, rollback, retry a poškozený záznam.");
 }
 finally

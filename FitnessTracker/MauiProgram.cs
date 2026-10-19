@@ -31,6 +31,7 @@ namespace FitnessTracker
                 Path.Combine(FileSystem.AppDataDirectory, FitnessDatabase.FileName)));
             // ViewModely stále používají stejné rozhraní; měníme pouze implementaci úložiště.
             builder.Services.AddSingleton<IWorkoutRepository, SqliteWorkoutRepository>();
+            builder.Services.AddSingleton<IWorkoutLogRepository, SqliteWorkoutLogRepository>();
             builder.Services.AddSingleton<IExerciseRepository, SqliteExerciseRepository>();
             builder.Services.AddTransient<ExerciseCatalogViewModel>();
             builder.Services.AddTransient<ExerciseCatalogPage>();

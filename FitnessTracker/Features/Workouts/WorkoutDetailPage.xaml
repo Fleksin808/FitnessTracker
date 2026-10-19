@@ -2,29 +2,61 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:workouts="clr-namespace:FitnessTracker.Features.Workouts"
+             xmlns:models="clr-namespace:FitnessTracker.Domain.Exercises"
              x:Class="FitnessTracker.Features.Workouts.WorkoutDetailPage"
-             x:DataType="workouts:WorkoutDetailViewModel"
-             Title="Detail tréninku">
+             x:Name="DetailPage"
+             x:DataType="workouts:WorkoutDetailViewModel" Title="Detail tréninku">
     <ScrollView>
-        <VerticalStackLayout Padding="24" Spacing="16">
-            <ActivityIndicator IsRunning="{Binding IsLoading}"
-                               IsVisible="{Binding IsLoading}"
-                               SemanticProperties.Description="Načítání detailu tréninku" />
-
-            <!-- Obsah se zobrazí až po úspěšném načtení; při chybě neukazujeme starý trénink. -->
+        <VerticalStackLayout Padding="24" Spacing="12">
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <VerticalStackLayout IsVisible="{Binding HasWorkout}" Spacing="8">
-                <Label Text="{Binding WorkoutName}"
-                       Style="{StaticResource Headline}"
-                       SemanticProperties.HeadingLevel="Level1" />
-                <Label Text="Začátek tréninku" />
+                <Label Text="{Binding WorkoutName}" Style="{StaticResource Headline}" />
                 <Label Text="{Binding StartedAtText}" />
+                <Label Text="{Binding FinishedAtText}" />
+                <VerticalStackLayout IsVisible="{Binding IsOpenWorkout}" Spacing="8">
+                    <!-- Nabídka je katalog; následující picker vybírá konkrétní výskyt cviku v tréninku. -->
+                    <Picker Title="Cvik z aktivního katalogu" ItemsSource="{Binding AvailableExercises}"
+                            ItemDisplayBinding="{Binding Name, x:DataType=models:Exercise}"
+                            SelectedItem="{Binding SelectedExercise}" IsEnabled="{Binding CanRecord}" />
+                    <Button Text="Přidat cvik do tréninku" Command="{Binding AddExerciseCommand}" />
+                    <Picker Title="Cvik pro novou sérii" ItemsSource="{Binding RecordedExercises}"
+                            ItemDisplayBinding="{Binding DisplayName, x:DataType=workouts:WorkoutExerciseItem}"
+                            SelectedItem="{Binding SelectedRecordedExercise}" IsEnabled="{Binding CanRecord}" />
+                    <Entry Text="{Binding RepetitionsInput}" Placeholder="Počet opakování" Keyboard="Numeric" IsEnabled="{Binding CanRecord}" />
+                    <Entry Text="{Binding LoadKilogramsInput}" Placeholder="Zátěž v kg (prázdné = nezadaná)" Keyboard="Numeric" IsEnabled="{Binding CanRecord}" />
+                    <Button Text="Přidat sérii" Command="{Binding AddSetCommand}" />
+                    <Button Text="Ukončit trénink" Command="{Binding FinishCommand}" />
+                </VerticalStackLayout>
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding RecordedExercises}" Spacing="16">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="workouts:WorkoutExerciseItem">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding DisplayName}" FontAttributes="Bold" />
+                                <HorizontalStackLayout Spacing="8">
+                                    <Button Text="Cvik výš" Command="{Binding ViewModel.MoveExerciseUpCommand, Source={x:Reference DetailPage}, x:DataType=workouts:WorkoutDetailPage}" CommandParameter="{Binding Exercise.Id}" />
+                                    <Button Text="Cvik níž" Command="{Binding ViewModel.MoveExerciseDownCommand, Source={x:Reference DetailPage}, x:DataType=workouts:WorkoutDetailPage}" CommandParameter="{Binding Exercise.Id}" />
+                                </HorizontalStackLayout>
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Sets}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="workouts:WorkoutSetItem">
+                                            <VerticalStackLayout Spacing="4" Padding="0,4">
+                                                <Label Text="{Binding DisplayText}" />
+                                                <HorizontalStackLayout Spacing="8">
+                                                    <Button Text="Série výš" Command="{Binding ViewModel.MoveSetUpCommand, Source={x:Reference DetailPage}, x:DataType=workouts:WorkoutDetailPage}" CommandParameter="{Binding Set.Id}" />
+                                                    <Button Text="Série níž" Command="{Binding ViewModel.MoveSetDownCommand, Source={x:Reference DetailPage}, x:DataType=workouts:WorkoutDetailPage}" CommandParameter="{Binding Set.Id}" />
+                                                </HorizontalStackLayout>
+                                            </VerticalStackLayout>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
             </VerticalStackLayout>
-
-            <!-- Chyba je oddělená od stavu načítání a umožňuje opakovat čtení. -->
-            <VerticalStackLayout IsVisible="{Binding HasError}" Spacing="8">
-                <Label Text="{Binding ErrorMessage}" />
-                <Button Text="Znovu načíst" Command="{Binding RetryCommand}" />
-            </VerticalStackLayout>
+            <Label Text="{Binding StatusMessage}" />
+            <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" />
+            <Button Text="Znovu načíst detail" Command="{Binding RetryCommand}" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
