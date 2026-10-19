@@ -2,7 +2,7 @@
 
 ## Stav a rozsah
 
-Toto je návrh první verze deníku silových tréninků. Implementován je základ modelu `Workout` s `Id`, `Name` a `StartedAt`, formulář, seznam a detail. Tréninky se ukládají do SQLite tabulky `Workouts`. Ostatní entity, zbývající pole a tabulky přidáváme postupně podle [roadmapy](roadmap.md).
+Toto je návrh první verze deníku silových tréninků. Implementovány jsou `Workout` (formulář, seznam a detail) a `Exercise` (katalog s přidáním, přejmenováním a archivací). SQLite schéma verze 2 obsahuje tabulky `Workouts` a `Exercises`. Propojení cviků s konkrétním tréninkem a série přidáme v kroku 5 [roadmapy](roadmap.md).
 
 Aplikace ukládá hlavní data lokálně do SQLite. Databázový soubor `fitness-tracker.db3` je v datovém adresáři aplikace získaném přes MAUI `FileSystem.AppDataDirectory`, nikoliv pomocí pevné cesty na Windows nebo Androidu. Vytváří se při první práci s úložištěm. Běžné zavření aplikace soubor zachová; odinstalace nebo vymazání dat aplikace může data odstranit. Dosavadní čistě paměťové záznamy nejsou zdrojem pro automatickou migraci.
 
@@ -44,6 +44,12 @@ Trénink může být prázdný rozpracovaný záznam. Konec nesmí předcházet 
 | IsArchived | bool | Skrytí z běžné nabídky nových cviků |
 
 Název není identifikátor a může se změnit. Přejmenování definice nesmí přepsat názvy cviků v již zaznamenaných trénincích.
+
+`Exercise(string name)` vytvoří nové ID a aktivní cvik; prázdné názvy včetně samotných bílých znaků jsou neplatné. `Restore` obnoví identitu a archivaci. `WithName` a `WithArchived` vracejí novou verzi stejného cviku s původním ID a nemění starý objekt. Názvy nejsou unikátní.
+
+`IExerciseRepository.GetAllAsync()` vrací výchozí aktivní nabídku; `GetAllAsync(true)` zahrne i archiv. Výsledkem je samostatný snímek pouze pro čtení, seřazený podle názvu pomocí `StringComparer.OrdinalIgnoreCase`, při shodě podle ID. `GetByIdAsync` hledá i archivované cviky. Archivaci lze vrátit. Operaci fyzického smazání zatím nenabízíme.
+
+`UpdateAsync` vyžaduje existující ID, jinak vyvolá `KeyNotFoundException`; nevytváří nové záznamy. Aktualizace ukládá název a archivaci z předaného modelu, tedy poslední úspěšný zápis platí. Řešení konfliktů více uživatelů nebo synchronizace není součástí této verze.
 
 ### WorkoutExercise
 
@@ -97,7 +103,7 @@ V rozhraní zadává uživatel kilogramy. Převod používá `decimal`: `62,5 kg
 
 ## Verze databáze a migrace
 
-### Implementovaná verze 1
+### Verze 1: tréninky
 
 Migrace `0 → 1` vytváří tabulku:
 
@@ -115,6 +121,21 @@ Oba příkazy probíhají v jedné transakci. Záznamy ukládáme přes SQL para
 Příklad uloženého času: `2026-10-13T16:30:00.1234567+00:00`. Při čtení používáme přesný formát `O` a invariantní kulturu. Nesprávný formát ID nebo času vyvolá chybu, nesmí se považovat za nenalezený trénink.
 
 První verze neobsahuje cizí klíče mezi tabulkami, protože existuje jen `Workouts`; jejich vynucování je už zapnuté na připojení pro budoucí migrace. Neznámou tabulku ve schématu verze 0 nepřepisujeme pomocí `IF NOT EXISTS`: konflikt migraci zastaví a zachová původní stav.
+
+### Verze 2: katalog cviků (aktuální)
+
+Migrace `1 → 2` přidává:
+
+```sql
+CREATE TABLE Exercises (
+    Id TEXT NOT NULL PRIMARY KEY,
+    Name TEXT NOT NULL CHECK (length(trim(Name)) > 0),
+    IsArchived INTEGER NOT NULL DEFAULT 0 CHECK (IsArchived IN (0, 1))
+);
+PRAGMA user_version = 2;
+```
+
+Tabulka `Workouts` a její záznamy se nemění. Nová databáze projde migracemi `0 → 1 → 2` v jedné transakci, starší databáze verze 1 provede pouze druhou migraci. Chyba migrace zachová předchozí verzi i data. Cizí klíče mezi tréninky a katalogem přidáme s `WorkoutExercise`; současné tabulky ještě nemají vzájemný vztah.
 
 ### Pravidla dalších migrací
 

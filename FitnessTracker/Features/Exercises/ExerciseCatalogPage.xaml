@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:exercises="clr-namespace:FitnessTracker.Features.Exercises"
+             xmlns:models="clr-namespace:FitnessTracker.Domain.Exercises"
+             x:Class="FitnessTracker.Features.Exercises.ExerciseCatalogPage"
+             x:Name="CatalogPage"
+             x:DataType="exercises:ExerciseCatalogViewModel"
+             Title="Cviky">
+    <Grid Padding="24" RowDefinitions="Auto,*" RowSpacing="16">
+        <VerticalStackLayout Spacing="8">
+            <Label Text="Katalog cviků" Style="{StaticResource Headline}" />
+            <Label Text="{Binding EditorTitle}" />
+            <Entry Text="{Binding Name, Mode=TwoWay}" Placeholder="Například: Dřep"
+                   IsEnabled="{Binding CanInteract}" SemanticProperties.Description="Název cviku" />
+            <Button Text="{Binding SaveButtonText}" Command="{Binding SaveCommand}" />
+            <Button Text="Zrušit úpravu" Command="{Binding CancelEditCommand}" IsVisible="{Binding IsEditing}" />
+            <Label Text="{Binding StatusMessage}" />
+            <Label Text="{Binding LoadError}" />
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Button Text="{Binding ArchiveFilterText}" Command="{Binding ToggleArchivedVisibilityCommand}" />
+            <Button Text="Obnovit seznam" Command="{Binding LoadCommand}" />
+        </VerticalStackLayout>
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Exercises}" SelectionMode="None"
+                        EmptyView="V této nabídce zatím nejsou žádné cviky.">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Exercise">
+                    <VerticalStackLayout Padding="0,8" Spacing="4">
+                        <Label Text="{Binding Name}" FontAttributes="Bold" />
+                        <Label Text="Archivováno" IsVisible="{Binding IsArchived}" />
+                        <!-- Položka je cvik; příkazy patří ViewModelu stránky. Parametrem je konkrétní cvik. -->
+                        <Button Text="Upravit"
+                                Command="{Binding ViewModel.EditExerciseCommand, Source={x:Reference CatalogPage}, x:DataType=exercises:ExerciseCatalogPage}"
+                                CommandParameter="{Binding .}" />
+                        <Button Text="Archivovat"
+                                Command="{Binding ViewModel.ToggleArchiveCommand, Source={x:Reference CatalogPage}, x:DataType=exercises:ExerciseCatalogPage}"
+                                CommandParameter="{Binding .}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsArchived}" Value="True">
+                                    <Setter Property="Text" Value="Obnovit cvik" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

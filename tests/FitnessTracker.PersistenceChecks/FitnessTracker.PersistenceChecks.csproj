@@ -9,6 +9,8 @@
     <PackageReference Include="sqlite-net-pcl" Version="1.11.285" />
     <!-- Ověřujeme skutečný datový kód bez spuštění MAUI a bez dalšího testovacího frameworku. -->
     <Compile Include="../../FitnessTracker/Domain/Workouts/Workout.cs" Link="Workout.cs" />
+    <Compile Include="../../FitnessTracker/Domain/Exercises/Exercise.cs" Link="Exercise.cs" />
+    <Compile Include="../../FitnessTracker/Application/Exercises/IExerciseRepository.cs" Link="IExerciseRepository.cs" />
     <Compile Include="../../FitnessTracker/Application/Workouts/IWorkoutRepository.cs" Link="IWorkoutRepository.cs" />
     <Compile Include="../../FitnessTracker/Infrastructure/Persistence/*.cs" Link="Persistence/%(Filename)%(Extension)" />
   </ItemGroup>

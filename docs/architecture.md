@@ -95,7 +95,7 @@ Původní registrace `AddSingleton<IWorkoutRepository, InMemoryWorkoutRepository
 Používáme `sqlite-net-pcl` ve verzi `1.11.285`. Je to lehká knihovna s asynchronním API, kterou používá také oficiální příklad MAUI. Nepotřebujeme další ORM ani SQL ve ViewModelech. Verzi máme připnutou v projektu aplikace i integračního ověření.
 
 - `FitnessDatabase` dostane cestu z `MauiProgram` a vytváří sdílené připojení. Databáze se otevře při první operaci. `SemaphoreSlim` chrání inicializaci před souběhem a `finally` vždy uvolní čekající volání. `FullMutex` zajistí bezpečný režim připojení pro asynchronní API knihovny.
-- Inicializace zapne cizí klíče a v transakci provede migraci `0 → 1`. Verzi eviduje `PRAGMA user_version`. Chyba neoznačí inicializaci za dokončenou a umožní další pokus. Novější verze se odmítne; data se nemažou ani neresetují.
+- Inicializace zapne cizí klíče a v transakci provede chybějící migrace do aktuální verze 2: `0 → 1` vytváří tréninky, `1 → 2` přidává katalog cviků. Verzi eviduje `PRAGMA user_version`. Chyba neoznačí inicializaci za dokončenou a umožní další pokus. Novější verze se odmítne; data se nemažou ani neresetují.
 - `WorkoutRow` reprezentuje databázové sloupce a převádí `Guid` a UTC čas na text. Pouze tento záznam má atribut SQLite a veřejné settery pro mapování. `Workout` nemá závislost na knihovně.
 - `SqliteWorkoutRepository` implementuje stejné rozhraní jako paměťová varianta. Přidání kontroluje ID a zapisuje v jedné transakci pomocí parametrů. Čtení mapuje záznamy přes `Workout.Restore` a vrací seřazený snímek pouze pro čtení. Poškozený záznam vyvolá chybu.
 - `MauiProgram` registruje databázi i repository jako singleton a předává cestu `Path.Combine(FileSystem.AppDataDirectory, FitnessDatabase.FileName)`. Připojení patří celému běhu aplikace. Záloha a výměna databázového souboru budou později vyžadovat koordinované uzavření připojení.
@@ -139,6 +139,22 @@ Kontrakt pro chat UI: `Workouts` slouží jako `ItemsSource`, položka má typ `
 Podklady: [Shell navigace a parametry](https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/shell/navigation?view=net-maui-10.0), [výběr v CollectionView](https://learn.microsoft.com/en-us/dotnet/maui/user-interface/controls/collectionview/selection?view=net-maui-10.0).
 
 ## Přidání modulu
+
+### Katalog cviků v kroku 4
+
+- `Domain/Exercises/Exercise` je neměnná definice cviku s ID, názvem a archivací. `WithName` a `WithArchived` vytvářejí nové verze stejné identity, takže se nemění dřívější snímky.
+- `Application/Exercises/IExerciseRepository` definuje přidání, hledání, načtení aktivního nebo celého katalogu a aktualizaci. Samostatnou službu pro prosté předání těchto operací nevytváříme.
+- `Infrastructure/Persistence/SqliteExerciseRepository` sdílí `FitnessDatabase` s tréninky. `ExerciseRow` odděluje databázové mapování od domény. Aktualizace používá UPDATE a při neexistujícím ID hlásí chybu; nikdy nepoužívá upsert. Fyzické mazání zatím není dostupné.
+- `Features/Exercises/ExerciseCatalogViewModel` poskytuje kolekci, editor, příkazy a stav `IsBusy`. Stejný editor řeší vytvoření i přejmenování. Během operace blokuje příkazy i přímá volání. Zápis a obnova seznamu mají odlišené výsledky: chyba čtení nesmí doporučit znovu uložit již úspěšnou změnu.
+- Přepínač zobrazení archivu při chybě načtení vrátí původní filtr a zachová starou kolekci. Archivace upravovaného cviku ukončí jeho editaci, aby se pozdější uložená změna nevrátila ke starému stavu.
+- `ExerciseCatalogPage` řeší jen binding a načtení při otevření. Příkazy v šabloně položky odkazují přes `x:Reference` na typovaný `ViewModel` stránky; `CommandParameter` je konkrétní cvik. Typ položky a typ zdroje příkazu jsou v XAML uvedené samostatně.
+- `AppShell` má dvě hlavní záložky: Tréninky a Cviky. Obě stránky získá konstruktorem z DI, databáze a repository jsou singleton, stránky a ViewModely transient. Stávající route detailu tréninku zůstává dostupná nad seznamem.
+
+Ruční ověření: vytvořit cvik, přejmenovat ho, zrušit rozpracovanou úpravu, archivovat, zobrazit archiv a obnovit. Restart musí zachovat cviky i původní tréninky. Datové operace a ViewModel jsou automaticky ověřené; samotná nová obrazovka zatím nebyla prakticky vyzkoušena.
+
+Podklady k UI: [Shell záložky](https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/shell/tabs?view=net-maui-10.0), [typované bindingy a jejich zdroje](https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/data-binding/compiled-bindings?view=net-maui-10.0).
+
+### Obecný postup
 
 Například měření tělesné váhy bude mít:
 

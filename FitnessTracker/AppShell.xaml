@@ -5,9 +5,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="FitnessTracker">
 
-    <ShellContent
-        x:Name="WorkoutsContent"
-        Title="Tréninky"
-        Route="Workouts" />
+    <!-- Samostatné hlavní sekce sdílejí databázi, ale mají vlastní stránky a stav. -->
+    <TabBar>
+        <ShellContent x:Name="WorkoutsContent" Title="Tréninky" Route="Workouts" />
+        <ShellContent x:Name="ExercisesContent" Title="Cviky" Route="Exercises" />
+    </TabBar>
 
 </Shell>

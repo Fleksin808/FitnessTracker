@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 using FitnessTracker.Domain.Workouts;
+using FitnessTracker.Domain.Exercises;
 using FitnessTracker.Infrastructure.Persistence;
 using SQLite;
 
@@ -15,7 +16,12 @@ if (args.Length == 2 && args[0] is "write" or "read")
     var childDatabase = new FitnessDatabase(args[1]);
     var childRepository = new SqliteWorkoutRepository(childDatabase);
     if (args[0] == "write")
+    {
         await childRepository.AddAsync(Workout.Restore(persistedId, persistedName, persistedTime));
+        var exercises = new SqliteExerciseRepository(childDatabase);
+        await exercises.AddAsync(Exercise.Restore(persistedId, "Původní název cviku", false));
+        await exercises.UpdateAsync(Exercise.Restore(persistedId, persistedName, true));
+    }
     else
     {
         var loaded = await childRepository.GetByIdAsync(persistedId);
@@ -23,6 +29,12 @@ if (args.Length == 2 && args[0] is "write" or "read")
             "Po restartu chybí původní ID nebo název.");
         Check(loaded!.StartedAt == persistedTime && loaded.StartedAt.Offset == TimeSpan.Zero,
             "Po restartu se změnil okamžik nebo přesnost času.");
+        var exercises = new SqliteExerciseRepository(childDatabase);
+        var exercise = await exercises.GetByIdAsync(persistedId);
+        Check(exercise is { IsArchived: true } && exercise.Name == persistedName,
+            "Po restartu se změnil název nebo archivace cviku.");
+        Check((await exercises.GetAllAsync()).Count == 0 && (await exercises.GetAllAsync(true)).Count == 1,
+            "Po restartu nefunguje filtr archivovaných cviků.");
     }
     SQLiteAsyncConnection.ResetPool();
     return;
@@ -38,7 +50,7 @@ try
     var repository = new SqliteWorkoutRepository(database);
     Check((await repository.GetAllAsync()).Count == 0, "Nová databáze není prázdná.");
     var connection = await database.GetConnectionAsync();
-    Check(await connection.ExecuteScalarAsync<int>("PRAGMA user_version") == 1, "Chybí migrace 1.");
+    Check(await connection.ExecuteScalarAsync<int>("PRAGMA user_version") == 2, "Chybí migrace 2.");
     Check(await connection.ExecuteScalarAsync<int>("PRAGMA foreign_keys") == 1, "Cizí klíče nejsou zapnuté.");
 
     var oldest = new Workout("  Starší trénink  ", persistedTime.AddDays(-1));
@@ -126,6 +138,7 @@ try
     string processPath = Path.Combine(directory, "restart.db3");
     await RunChildAsync("write", processPath);
     await RunChildAsync("read", processPath);
+    await ExerciseChecks.RunAsync(directory);
     Console.WriteLine("PASS: migrace, ID, Unicode/SQL parametry, přesný UTC čas, řazení, snapshot, duplicity, souběh, opětovné otevření, restart procesu, novější verze, rollback, retry a poškozený záznam.");
 }
 finally

@@ -15,7 +15,7 @@ Platí [architektura](architecture.md) a [datové dohody](data-model.md). Stav k
 - [x] Tato úprava prošla sestavením pro Windows.
 - [x] Návrh architektury, dat a pořadí práce je uložen v dokumentaci.
 
-Existuje model `Workout`, formulář, seznam a detail. Uživatel v chatu „Základní struktura“ potvrdil fungování detailu, návratu i opětovného otevření. Aplikace nyní používá SQLite; trvalost dat je automaticky ověřena mezi dvěma procesy. Praktický restart MAUI aplikace a spuštění na telefonu zůstávají k ověření.
+Existuje model `Workout`, formulář, seznam a detail. Uživatel v chatu „Základní struktura“ potvrdil fungování detailu, návratu i opětovného otevření. Aplikace nyní používá SQLite; trvalost dat je automaticky ověřena mezi dvěma procesy. Zachování záznamů po restartu MAUI uživatel potvrdil. Telefon a kontrola detailů po restartu zůstávají otevřené. Katalog cviků je nyní implementovaný; čeká na ruční ověření nové obrazovky.
 
 ## 1. MVVM a rozdělení odpovědností
 
@@ -57,23 +57,29 @@ Detail v kroku 2: `WorkoutDetailPage` přijme `workoutId` přes `IQueryAttributa
 - [x] Implementovat SQLite úložiště tréninků a změnit registraci závislostí.
 - [x] Zachovat stav ukládání a ochranu před dvojím odesláním; zobrazit chybu čtení a opakované načtení.
 - [x] Automaticky ověřit ID, přesný UTC čas, migrace a načtení mezi dvěma samostatnými procesy.
-- [ ] Prakticky ověřit tréninky a detaily po restartu MAUI aplikace.
+- [x] Prakticky ověřit zachování tréninků po restartu MAUI (potvrzeno uživatelem).
+- [ ] Prakticky ověřit detaily po restartu MAUI aplikace.
 - [ ] Ověřit spuštění a ukládání na cílovém telefonu nebo emulátoru.
 
 Hotovo, když tréninky přežijí restart na ověřených platformách a obrazovka neobsahuje databázový kód. Cílovou telefonní platformu a dostupné zařízení určíme před tímto ověřením.
 
-Implementace kroku 3: `FitnessDatabase` otevírá databázi při prvním použití a provádí verzovanou migraci. `WorkoutRow` mapuje textové ID a UTC čas na `Workout.Restore`. `SqliteWorkoutRepository` používá stejné rozhraní jako paměťová varianta. Testy v `tests/FitnessTracker.PersistenceChecks` pokrývají trvalost mezi procesy, pořadí, duplicity, souběh, retry, neúspěšnou migraci, ochranu novější verze a poškozený záznam. Windows build, Android build (mimo omezené prostředí) a integrační ověření prošly. Běh na telefonu ani praktický restart MAUI tím nejsou potvrzené.
+Implementace kroku 3: `FitnessDatabase` otevírá databázi při prvním použití a provádí verzovanou migraci. `WorkoutRow` mapuje textové ID a UTC čas na `Workout.Restore`. `SqliteWorkoutRepository` používá stejné rozhraní jako paměťová varianta. Testy v `tests/FitnessTracker.PersistenceChecks` pokrývají trvalost mezi procesy, pořadí, duplicity, souběh, retry, neúspěšnou migraci, ochranu novější verze a poškozený záznam. Windows build, Android build (mimo omezené prostředí) a integrační ověření prošly. Zachování záznamů po restartu následně potvrdil uživatel. Běh na telefonu a kontrola detailů po restartu zůstávají otevřené.
 
 Praktická kontrola: přidat dva tréninky, otevřít detail, zavřít aplikaci i ladicí běh, znovu ji spustit a ověřit oba tréninky i jejich detaily. Další přidání musí zachovat starší záznamy.
 
 ## 4. Katalog cviků
 
-- [ ] Přidat `Exercise`, aplikační operace a úložiště.
-- [ ] Zavést migraci a obrazovky seznamu, vytvoření a úpravy.
-- [ ] Umožnit archivaci a odlišit ji od smazání.
-- [ ] Ověřit názvy a jejich změny.
+- [x] Přidat `Exercise`, rozhraní operací a SQLite úložiště.
+- [x] Zavést migraci 1 → 2 a sekci Cviky se seznamem a editorem pro vytvoření i úpravy.
+- [x] Umožnit vratnou archivaci a výchozí skrytí archivovaných cviků; fyzické smazání nenabízet.
+- [x] Automaticky ověřit názvy, ID, přejmenování, archivaci, filtr, chybové stavy a migraci.
+- [ ] Prakticky ověřit sekci Cviky včetně restartu a přepínání zpět na tréninky.
 
 Hotovo, když lze katalog spravovat a archivované cviky se běžně nenabízejí pro nový trénink.
+
+Implementace kroku 4: katalog má vlastní model, rozhraní, SQLite repository a ViewModel. V sekci Cviky lze přidat a upravit název, zrušit editaci, archivovat a znovu obnovit cvik. Výchozí seznam archiv skrývá, tlačítko umožní zobrazit ho. Migrace 1 → 2 zachová původní tréninky. Přejmenování a archivace nemění ID. Automaticky prošly databázové testy i ověření ViewModelu (validace, příkazy, souběh, chyby zápisu/čtení, rollback filtru a retry); Windows i Android build prošly bez chyb a upozornění. Praktické ověření nového UI zatím chybí.
+
+Ruční kontrola: otevřít Cviky, vytvořit dva cviky, jeden přejmenovat, zkusit prázdný název a zrušení úpravy, jeden archivovat, zobrazit archiv a obnovit. Po restartu ověřit názvy a archivaci a zkontrolovat i původní seznam a detail tréninku. Přidávání cviků do tréninku je až krok 5.
 
 ## 5. Zapisování skutečného tréninku
 

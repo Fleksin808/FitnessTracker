@@ -6,7 +6,7 @@ namespace FitnessTracker.Infrastructure.Persistence;
 public sealed class FitnessDatabase
 {
     public const string FileName = "fitness-tracker.db3";
-    private const int CurrentSchemaVersion = 1;
+    private const int CurrentSchemaVersion = 2;
     private readonly SQLiteAsyncConnection connection;
     private readonly SemaphoreSlim initializationGate = new(1, 1);
     private bool initialized;
@@ -48,6 +48,20 @@ public sealed class FitnessDatabase
                             )
                             """);
                         database.Execute("PRAGMA user_version = 1");
+                        version = 1;
+                    }
+
+                    if (version == 1)
+                    {
+                        // Migrace 1 → 2 přidá katalog a ponechá tabulku i data tréninků beze změny.
+                        database.Execute("""
+                            CREATE TABLE Exercises (
+                                Id TEXT NOT NULL PRIMARY KEY,
+                                Name TEXT NOT NULL CHECK (length(trim(Name)) > 0),
+                                IsArchived INTEGER NOT NULL DEFAULT 0 CHECK (IsArchived IN (0, 1))
+                            )
+                            """);
+                        database.Execute("PRAGMA user_version = 2");
                     }
                 }).ConfigureAwait(false);
 
