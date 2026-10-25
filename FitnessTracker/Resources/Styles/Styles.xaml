@@ -29,10 +29,10 @@
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="BorderWidth" Value="0"/>
         <Setter Property="CornerRadius" Value="8"/>
-        <!-- Sdílené rozměry drží tlačítka kompaktní; výška může růst s velikostí textu. -->
-        <Setter Property="Padding" Value="16,8"/>
-        <Setter Property="MinimumHeightRequest" Value="44"/>
-        <Setter Property="MinimumWidthRequest" Value="100"/>
+        <!-- Jednotné odsazení a minimální rozměry dávají tlačítkům konzistentní velikost. -->
+        <Setter Property="Padding" Value="18,12"/>
+        <Setter Property="MinimumHeightRequest" Value="48"/>
+        <Setter Property="MinimumWidthRequest" Value="140"/>
         <Setter Property="MaximumWidthRequest" Value="320"/>
         <!-- Start zabrání roztažení krátkého tlačítka přes celou šířku stránky. -->
         <Setter Property="HorizontalOptions" Value="Start"/>

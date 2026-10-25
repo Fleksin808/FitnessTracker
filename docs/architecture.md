@@ -238,7 +238,7 @@ Každý krok má malé změny, vysvětlení toku dat a praktické ověření. Au
 
 ## Dočasné sjednocení tlačítek
 
-Vzhled zatím upravujeme jen pro základní použitelnost, při zachování pořadí funkcí v roadmapě. Sdílený styl `Button` v `Resources/Styles/Styles.xaml` používá odsazení `16,8`, minimální výšku 44, minimální šířku 100, maximální šířku 320 a zarovnání vlevo. Výška není pevná, aby se mohla přizpůsobit textu. Hlavní formulář používá rozestupy 12. Příkazy, bindingy a datová logika se tím nemění. Komplexní návrh UI zůstává odložený do dokončení základní funkčnosti.
+Vzhled zatím upravujeme jen pro základní použitelnost, při zachování pořadí funkcí v roadmapě. Sdílený styl `Button` v `Resources/Styles/Styles.xaml` používá odsazení `18,12`, minimální výšku 48, minimální šířku 140, maximální šířku 320 a zarovnání vlevo. Výška může růst s textem, například při větším systémovém písmu. Příkazy, bindingy a datová logika se tím nemění. Komplexní návrh UI zůstává odložený do dokončení základní funkčnosti.
 
 ## Report pro git commit
 
