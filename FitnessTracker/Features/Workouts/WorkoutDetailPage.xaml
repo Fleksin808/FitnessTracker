@@ -44,6 +44,7 @@
                                                 <HorizontalStackLayout Spacing="8">
                                                     <Button Text="Série výš" Command="{Binding ViewModel.MoveSetUpCommand, Source={x:Reference DetailPage}, x:DataType=workouts:WorkoutDetailPage}" CommandParameter="{Binding Set.Id}" />
                                                     <Button Text="Série níž" Command="{Binding ViewModel.MoveSetDownCommand, Source={x:Reference DetailPage}, x:DataType=workouts:WorkoutDetailPage}" CommandParameter="{Binding Set.Id}" />
+                                                    <Button Text="Upravit" Command="{Binding ViewModel.EditSetCommand, Source={x:Reference DetailPage}, x:DataType=workouts:WorkoutDetailPage}" CommandParameter="{Binding Set.Id}" />
                                                 </HorizontalStackLayout>
                                             </VerticalStackLayout>
                                         </DataTemplate>
@@ -52,6 +53,19 @@
                             </VerticalStackLayout>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+                <!-- Editor je sdílený pro vybranou sérii; dovolí opravit i ukončenou historii. -->
+                <VerticalStackLayout IsVisible="{Binding IsEditingSet}" Spacing="8">
+                    <Label Text="Upravit sérii" FontAttributes="Bold" />
+                    <Label Text="{Binding SelectedSetText}" />
+                    <Entry Text="{Binding EditRepetitionsInput}" Placeholder="Počet opakování"
+                           Keyboard="Numeric" IsEnabled="{Binding CanEditRecordedData}" />
+                    <Entry Text="{Binding EditLoadKilogramsInput}" Placeholder="Zátěž v kg (prázdné = nezadaná)"
+                           Keyboard="Numeric" IsEnabled="{Binding CanEditRecordedData}" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="Uložit opravu" Command="{Binding SaveSetEditCommand}" />
+                        <Button Text="Zrušit" Command="{Binding CancelSetEditCommand}" />
+                    </HorizontalStackLayout>
                 </VerticalStackLayout>
             </VerticalStackLayout>
             <Label Text="{Binding StatusMessage}" />

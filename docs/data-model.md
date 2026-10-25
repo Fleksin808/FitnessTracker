@@ -107,7 +107,7 @@ V rozhraní zadává uživatel kilogramy. Převod používá `decimal`: `62,5 kg
 
 `IWorkoutLogRepository` načítá celý trénink jako neměnný `WorkoutLog` s kolekcí `WorkoutExerciseLog` a sériemi. Čtení všech částí probíhá v jedné transakci. `WorkoutExercise` obsahuje odkaz do katalogu i kopii názvu z okamžiku přidání. Stejný katalogový cvik lze přidat vícekrát; každý výskyt má vlastní ID a série.
 
-Přidat lze jen aktivní cvik z katalogu, což repository zkontroluje ve stejné transakci jako zápis. Následné přejmenování či archivace definice neovlivňuje historický název a nebrání zapisovat série k již přidanému výskytu. Ukončený trénink je v této etapě pouze pro čtení. Kontrola ukončení je v repository, nikoliv jen v tlačítkách UI.
+Přidat lze jen aktivní cvik z katalogu, což repository zkontroluje ve stejné transakci jako zápis. Následné přejmenování či archivace definice neovlivňuje historický název a nebrání zapisovat série k již přidanému výskytu. Ukončený trénink nepřijímá nové série ani změny pořadí; oprava opakování a zátěže existující série je výslovně povolena i v historii. Repository pravidla vynucuje, nestačí pouze skrýt tlačítka v UI.
 
 Přidávání používá další pozici v rámci vlastníka. Přesun má směr -1 nebo 1; za okrajem je beze změny. Prohození používá dočasnou volnou kladnou pozici, takže neporušuje UNIQUE ani CHECK během operace. Celý přesun je transakce a při chybě se vrátí zpět.
 

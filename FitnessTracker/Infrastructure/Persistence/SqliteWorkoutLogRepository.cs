@@ -61,6 +61,30 @@ public sealed class SqliteWorkoutLogRepository(FitnessDatabase database) : IWork
         }).ConfigureAwait(false);
     }
 
+    public async Task UpdateSetAsync(Guid setId, int repetitions, long? loadGrams)
+    {
+        var connection = await database.GetConnectionAsync().ConfigureAwait(false);
+        await connection.RunInTransactionAsync(transaction =>
+        {
+            var row = transaction.Query<WorkoutSetRow>("SELECT * FROM WorkoutSets WHERE Id = ?", setId.ToString("D")).SingleOrDefault()
+                ?? throw new KeyNotFoundException("Série není dostupná.");
+            var exercise = transaction.Query<WorkoutExerciseRow>(
+                "SELECT * FROM WorkoutExercises WHERE Id = ?", row.WorkoutExerciseId).SingleOrDefault()
+                ?? throw new KeyNotFoundException("Zaznamenaný cvik není dostupný.");
+            // Oprava historie smí proběhnout i po ukončení; ostatní zápisové operace zůstávají zakázané.
+            var workout = transaction.Query<WorkoutRow>(
+                "SELECT * FROM Workouts WHERE Id = ?", exercise.WorkoutId).SingleOrDefault()
+                ?? throw new KeyNotFoundException("Trénink není dostupný.");
+            _ = workout.ToWorkout();
+
+            // Nový neměnný model znovu ověří pravidla ještě před změnou databáze.
+            var updated = new WorkoutSet(Guid.ParseExact(row.Id, "D"), Guid.ParseExact(row.WorkoutExerciseId, "D"),
+                row.Position, repetitions, loadGrams);
+            transaction.Execute("UPDATE WorkoutSets SET Repetitions = ?, LoadGrams = ? WHERE Id = ?",
+                updated.Repetitions, updated.LoadGrams, row.Id);
+        }).ConfigureAwait(false);
+    }
+
     public async Task MoveExerciseAsync(Guid workoutExerciseId, int direction)
     {
         ValidateDirection(direction);

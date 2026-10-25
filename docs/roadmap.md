@@ -101,7 +101,7 @@ Ruční kontrolu nového detailu, zápisu sérií, změn pořadí, restartu a uk
 ## 6. Historie a úpravy
 
 - [x] Přidat přehled historie a filtrování podle data.
-- [ ] Umožnit úpravu zaznamenaných údajů.
+- [x] Umožnit opravu opakování a zátěže zaznamenané série.
 - [ ] Přidat smazání tréninku s potvrzením v aplikaci.
 - [ ] Ověřit odstranění návazných dat a zachování katalogu cviků.
 
@@ -110,6 +110,8 @@ Hotovo, když lze starý trénink najít, upravit a odstranit bez nekonzistentn�
 První část kroku 6: samostatná záložka Historie načte tréninky od repository a dovolí zapnout dolní a horní mez podle místního data začátku. Výběr řádku otevře existující detail podle ID. Filtr probíhá nad načteným snímkem v paměti; databázové schéma se nemění. Úpravy a mazání historie zůstávají dalšími částmi kroku.
 
 Ruční kontrola historie čeká: otevřít záložku, ověřit seznam a detail, zapnout filtr od data i do data, zadat období bez výsledků a zkusit počáteční datum po koncovém. Potom zrušit filtr a ověřit návrat všech záznamů.
+
+Oprava série: v detailu lze otevřít editor uložené série a změnit opakování nebo zátěž. Jde o jedinou změnu povolenou také v ukončeném tréninku; nové série a přesuny zůstávají zakázané. Ručně ověřit validní a nevalidní vstup, prázdnou zátěž, nulu, uložení po restartu a opravu v ukončeném tréninku.
 
 ## 7. Záloha a obnova
 

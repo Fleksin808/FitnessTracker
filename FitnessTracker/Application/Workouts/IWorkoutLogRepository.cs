@@ -9,6 +9,8 @@ public interface IWorkoutLogRepository
     /// <summary>Přidá aktivní katalogový cvik na konec tréninku, název zkopíruje do historie.</summary>
     Task AddExerciseAsync(Guid workoutId, Guid exerciseId);
     Task AddSetAsync(Guid workoutExerciseId, int repetitions, long? loadGrams);
+    /// <summary>Opraví opakování a zátěž série, a to i v ukončeném tréninku.</summary>
+    Task UpdateSetAsync(Guid setId, int repetitions, long? loadGrams);
     /// <summary>Směr je -1 nebo 1; pohyb za okraj je beze změny. Pozice se mění atomicky.</summary>
     Task MoveExerciseAsync(Guid workoutExerciseId, int direction);
     Task MoveSetAsync(Guid setId, int direction);
