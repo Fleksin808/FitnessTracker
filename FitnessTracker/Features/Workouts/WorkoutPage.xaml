@@ -33,7 +33,12 @@
                         SelectionMode="Single" SelectionChanged="OnWorkoutSelectionChanged">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:Workout">
-                    <Label Text="{Binding Name}" />
+                    <!-- Odsazení zvětšuje čitelnou plochu položky; větší písmo usnadní rychlé skenování seznamu. -->
+                    <Label Text="{Binding Name}"
+                           Padding="16,10"
+                           FontSize="18"
+                           MinimumHeightRequest="48"
+                           VerticalTextAlignment="Center" />
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
