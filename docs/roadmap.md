@@ -132,12 +132,16 @@ Kontrakt je popsán v `docs/data-model.md`: JSON v1 je úplný snímek se všemi
 - [x] Definovat první souhrn: všechny tréninky, dokončené tréninky, série a objem zaznamenané zátěže.
 - [x] Implementovat první souhrn v samostatné záložce Statistiky.
 - [ ] Ručně ověřit výpočty na známých datech včetně nezadané a nulové zátěže.
-- [ ] Navrhnout šablony odděleně od zaznamenané historie.
+- [x] Navrhnout šablony odděleně od zaznamenané historie.
+- [ ] Rozšířit zálohu na JSON v2 pro šablony a dál přijímat import v1.
+- [ ] Umožnit vytváření a úpravu šablon.
 - [ ] Umožnit vytvořit samostatný trénink ze šablony.
 
 Hotovo, když mají statistiky vysvětlený význam a změna šablony nemění dříve vytvořený trénink.
 
 První statistiky jsou celoživotní a zahrnují i rozpracované tréninky. Objem je součet `repetitions × loadGrams / 1000`; série s `loadGrams = null` se vynechá, nula přispívá nulou. Tělesná hmotnost, asistence a další typy měření nejsou součástí tohoto objemu. Před dalšími statistikami ověřit výsledky na známém malém datasetu.
+
+Návrh šablon: šablona obsahuje název a seřazené odkazy na definice cviků, nikoliv skutečné série nebo naměřený výkon. Vytvoření z ní založí nový samostatný trénink a zkopíruje aktuální názvy cviků do historie bez předvyplněných sérií. Změna či smazání šablony neovlivní dříve vytvořené tréninky. Archivovaný cvik zůstane v šabloně viditelný, ale před vytvořením tréninku musí být znovu aktivní. Přidání šablon vyžaduje SQLite migraci 3 → 4 a JSON zálohu v2; import v1 vytvoří deník bez šablon.
 
 ## Pozdější samostatné moduly
 

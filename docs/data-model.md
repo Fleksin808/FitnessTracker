@@ -242,6 +242,21 @@ První souhrn zahrnuje všechna uložená data, včetně rozpracovaných trénin
 
 Rozsah je zatím „celá historie“, bez filtru období. Repository načítá počty a série v jedné transakci. Výpočty je potřeba ručně porovnat s malým známým souborem dat před rozšířením statistik.
 
+## Návrh šablon tréninku
+
+Šablona zatím není v databázi implementována. Oddělíme definici plánu od skutečného výkonu:
+
+| Entita | Navržená data | Význam |
+| --- | --- | --- |
+| `WorkoutTemplate` | `Id`, `Name` | Název opakovatelného plánu |
+| `WorkoutTemplateExercise` | `Id`, `TemplateId`, `ExerciseId`, `Position` | Odkaz na cvik katalogu a jeho pořadí v plánu |
+
+Šablona neobsahuje opakování, zátěž ani hotové série. Tyto údaje patří skutečnému tréninku. Vytvoření tréninku ze šablony atomicky založí nový `Workout` a jeho `WorkoutExercises`, přičemž název cviku zkopíruje z aktuální definice. Záznam začíná bez sérií; pozdější přidání šablony, její úprava nebo smazání nezmění starší tréninky.
+
+Výskyt v šabloně odkazuje přes cizí klíč `ExerciseId` na katalog. Archivace definici nemaže, takže šablona zůstane zachovaná a zobrazitelná. Vytvoření tréninku vyžaduje, aby všechny její cviky byly aktivní; jinak se celá operace odmítne bez částečného tréninku.
+
+Ukládání šablon si vyžádá migraci SQLite `3 → 4` a dvě nové tabulky s kaskádou z šablony na její položky a zákazem fyzického smazání použité definice. Formát zálohy přejde na JSON v2 s poli `workoutTemplates` a `workoutTemplateExercises`; importer dál přijme JSON v1 a obnoví z něj deník bez šablon. Export bude vytvářet pouze nejnovější verzi.
+
 ## Budoucí rozšíření
 
 Měření tělesné váhy dostane samostatnou entitu a tabulku. Šablona tréninku bude samostatná definice, ze které vznikne konkrétní trénink. Statistiky budou nejprve vypočítané nad existující historií.

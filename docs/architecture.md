@@ -178,6 +178,12 @@ Automatické ověření zahrnuje přesnost a null/0, změny katalogu, souběh, r
 - Objem vychází jen z uložených opakování a zátěže v gramech. Jeho jednotka je kg × opakování; null zátěž se vynechává a nula zůstává nulovým příspěvkem.
 - `StatisticsPage` a `StatisticsViewModel` zobrazují základní počty a objem. V nové statistice nejprve popíšeme její význam a ověříme výpočet na známých datech.
 
+### Návrh šablon v kroku 8
+
+- Šablony budou samostatný modul s vlastními modely a úložištěm; nepoužijí tabulky skutečných `WorkoutExercises` ani `WorkoutSets` k ukládání plánovaných hodnot.
+- Aplikační operace „vytvořit trénink ze šablony“ koordinuje založení tréninku i jeho cviků v jedné transakci. Jednorázový plánovaný obsah se kopíruje do skutečné historie jako nový záznam bez sérií.
+- Změna verze SQLite na 4 a JSON zálohy na v2 proběhne společně s implementací dat šablony. Importer zachová podporu stávajících záloh v1.
+
 ### Katalog cviků v kroku 4
 
 - `Domain/Exercises/Exercise` je neměnná definice cviku s ID, názvem a archivací. `WithName` a `WithArchived` vytvářejí nové verze stejné identity, takže se nemění dřívější snímky.
