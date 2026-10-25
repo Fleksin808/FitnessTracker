@@ -256,6 +256,11 @@ Generated_Code/
 # because we have git ;-)
 _UpgradeReport_Files/
 Backup*/
+# These directories are application source modules, not generated backup files.
+!FitnessTracker/Application/Backup/
+!FitnessTracker/Application/Backup/**
+!FitnessTracker/Features/Backup/
+!FitnessTracker/Features/Backup/**
 UpgradeLog*.XML
 UpgradeLog*.htm
 ServiceFabricBackup/

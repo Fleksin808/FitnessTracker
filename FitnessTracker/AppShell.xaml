@@ -10,6 +10,7 @@
         <ShellContent x:Name="WorkoutsContent" Title="Tréninky" Route="Workouts" />
         <ShellContent x:Name="HistoryContent" Title="Historie" Route="History" />
         <ShellContent x:Name="ExercisesContent" Title="Cviky" Route="Exercises" />
+        <ShellContent x:Name="BackupContent" Title="Záloha" Route="Backup" />
     </TabBar>
 
 </Shell>

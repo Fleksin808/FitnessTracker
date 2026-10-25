@@ -117,12 +117,15 @@ Mazání: potvrzovací dialog uvádí, že se smažou i zaznamenané cviky a sé
 
 ## 7. Záloha a obnova
 
-- [ ] Dokončit verzovaný JSON kontrakt a pravidla obnovy.
-- [ ] Implementovat export a obnovu ze zálohy.
-- [ ] Před zápisem validovat soubor, vztahy a hodnoty.
-- [ ] Zajistit atomickou obnovu a ověřit neplatnou i nepodporovanou zálohu.
+- [x] Dokončit verzovaný JSON kontrakt a pravidla obnovy.
+- [x] Implementovat export a obnovu ze zálohy.
+- [x] Před zápisem validovat soubor, vztahy a hodnoty.
+- [x] Zajistit atomickou obnovu v SQLite transakci.
+- [ ] Ručně ověřit neplatnou a nepodporovanou zálohu bez změny stávajících dat.
 
 Hotovo, když export a následná obnova zachovají údaje a neplatný import nezmění stávající data.
+
+Kontrakt je popsán v `docs/data-model.md`: JSON v1 je úplný snímek se všemi čtyřmi typy záznamů. `IFitnessBackupService` exportuje konzistentní snapshot, kontroluje velikost, verzi, položky a vztahy a obnovuje databázi v jediné transakci. `BackupPage` používá systémový výběr souboru a před náhradou deníku vyžádá potvrzení. Ještě je potřeba ručně ověřit export/obnovu a odmítnutí poškozené či nepodporované zálohy.
 
 ## 8. Statistiky a šablony
 

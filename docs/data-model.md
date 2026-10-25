@@ -183,9 +183,53 @@ Chyba migrace nesmí vést k automatickému smazání databáze. Databázi s nov
 
 ## Export a import
 
-Budoucí JSON export bude mít vlastní `formatVersion`, čas exportu v UTC a pole entit. Verze exportu je nezávislá na verzi databáze. GUID budou textové, časy ve stejném UTC formátu a zátěž v celých gramech.
+Záloha je úplný snímek lokálních aplikačních dat ve verzovaném JSON souboru. Je určena pro přenos nebo obnovení téhož deníku; není synchronizačním formátem. `formatVersion` se mění nezávisle na `PRAGMA user_version` SQLite.
 
-Před implementací zálohy stanovíme přesný JSON kontrakt a pravidla obnovy. Import musí před zápisem ověřit verzi, ID, návaznosti a platnost hodnot. Obnova proběhne atomicky. Slučování více záloh není součástí první verze obnovy.
+### JSON verze 1
+
+- Kódování UTF-8; názvy vlastností jsou přesně camelCase a rozlišují velikost písmen.
+- Kořen obsahuje `formatVersion` (celé číslo `1`), `exportedAtUtc` (čas exportu v UTC) a povinná pole `workouts`, `exercises`, `workoutExercises`, `workoutSets`.
+- Každé pole je JSON array, i když je prázdné. Každá vlastnost z kontraktu musí být přítomná; nullable hodnoty jsou výslovně `null`.
+- Import odmítne neznámou verzi i neznámé vlastnosti. Komentáře, koncové čárky a neplatný JSON nejsou povoleny.
+
+```json
+{
+  "formatVersion": 1,
+  "exportedAtUtc": "2026-10-25T12:00:00.0000000+00:00",
+  "workouts": [
+    { "id": "11111111-1111-1111-1111-111111111111", "name": "Trénink nohou", "startedAt": "2026-10-25T10:00:00.0000000+00:00", "finishedAt": null }
+  ],
+  "exercises": [
+    { "id": "22222222-2222-2222-2222-222222222222", "name": "Dřep", "isArchived": false }
+  ],
+  "workoutExercises": [
+    { "id": "33333333-3333-3333-3333-333333333333", "workoutId": "11111111-1111-1111-1111-111111111111", "exerciseId": "22222222-2222-2222-2222-222222222222", "exerciseNameSnapshot": "Dřep", "position": 1 }
+  ],
+  "workoutSets": [
+    { "id": "44444444-4444-4444-4444-444444444444", "workoutExerciseId": "33333333-3333-3333-3333-333333333333", "position": 1, "repetitions": 8, "loadGrams": 62500 }
+  ]
+}
+```
+
+| Záznam | Povinné vlastnosti a význam |
+| --- | --- |
+| `workouts[]` | `id` GUID ve formátu `D`; `name` neprázdný; `startedAt` UTC round-trip `O`; `finishedAt` buď UTC `O`, nebo `null` |
+| `exercises[]` | `id`; `name` neprázdný; `isArchived` boolean |
+| `workoutExercises[]` | `id`; existující `workoutId` a `exerciseId`; `exerciseNameSnapshot`; kladné `position` |
+| `workoutSets[]` | `id`; existující `workoutExerciseId`; kladné `position` a `repetitions`; `loadGrams` nezáporné celé číslo, nebo `null` |
+
+Identifikátory jsou kanonické řetězce GUID `D`. Časové hodnoty musí mít nulový UTC offset a přesný round-trip formát `O`; čas exportu také. Pořadí série je unikátní v rámci výskytu cviku a pořadí cviku v rámci tréninku. ID jsou v každé tabulce unikátní. Název snímku cviku se nemusí rovnat aktuálnímu názvu katalogu: rozdíl uchovává historický název. Export neobsahuje cesty k souborům, UI stav, logy ani nastavení zařízení.
+
+### Pravidla obnovy
+
+Obnova **nahradí celý současný deník** obsahem zálohy. Sloučení do existujících dat není v první verzi podporováno. UI před importem výslovně potvrdí, že přepíše tréninky, katalog i historii; zrušení dialogu neprovede žádný zápis.
+
+1. Soubor celý načteme a naparsujeme do přenosných DTO; databázi zatím neměníme.
+2. Ověříme verzi, povinné vlastnosti, limity vstupu, unikátní ID, hodnoty polí, pořadí, časové vztahy a všechny odkazy mezi poli. Doménové modely znovu ověří pravidla entit. Neznámá či chybějící data odmítneme.
+3. Teprve po kompletní validaci otevřeme jednu SQLite transakci. Odstraníme staré tréninky (kaskáda vyčistí jejich záznamy), poté staré definice cviků, a vložíme validované entity v pořadí `Exercises → Workouts → WorkoutExercises → WorkoutSets`.
+4. Při jakékoliv chybě transakci vrátíme zpět, takže původní databáze zůstane celá. `user_version` se nemění; schéma zůstává odpovědností migrací aplikace.
+
+Import odmítne nepodporovanou budoucí verzi, poškozené či duplicitní ID, neplatné hodnoty i neexistující odkaz. Maximální velikost souboru je 25 MiB a každé pole entit může obsahovat nejvýše 100 000 položek; limity chrání aplikaci před neúměrnou alokací paměti. Před zápisem se nesmí kvůli validaci mazat, přejmenovávat ani jinak měnit současná data.
 
 ## Budoucí rozšíření
 
