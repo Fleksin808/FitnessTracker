@@ -129,12 +129,15 @@ Kontrakt je popsán v `docs/data-model.md`: JSON v1 je úplný snímek se všemi
 
 ## 8. Statistiky a šablony
 
-- [ ] Dohodnout definice statistik, například počet tréninků nebo objem zátěže.
-- [ ] Přidávat statistiky jednotlivě a ověřovat výpočty na známých datech.
+- [x] Definovat první souhrn: všechny tréninky, dokončené tréninky, série a objem zaznamenané zátěže.
+- [x] Implementovat první souhrn v samostatné záložce Statistiky.
+- [ ] Ručně ověřit výpočty na známých datech včetně nezadané a nulové zátěže.
 - [ ] Navrhnout šablony odděleně od zaznamenané historie.
 - [ ] Umožnit vytvořit samostatný trénink ze šablony.
 
 Hotovo, když mají statistiky vysvětlený význam a změna šablony nemění dříve vytvořený trénink.
+
+První statistiky jsou celoživotní a zahrnují i rozpracované tréninky. Objem je součet `repetitions × loadGrams / 1000`; série s `loadGrams = null` se vynechá, nula přispívá nulou. Tělesná hmotnost, asistence a další typy měření nejsou součástí tohoto objemu. Před dalšími statistikami ověřit výsledky na známém malém datasetu.
 
 ## Pozdější samostatné moduly
 

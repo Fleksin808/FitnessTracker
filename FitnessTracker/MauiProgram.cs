@@ -9,6 +9,8 @@ namespace FitnessTracker
     using Features.WorkoutHistory;
     using Application.Backup;
     using Features.Backup;
+    using Application.Statistics;
+    using Features.Statistics;
     using Infrastructure.Persistence;
     using Microsoft.Extensions.DependencyInjection;
 
@@ -37,8 +39,11 @@ namespace FitnessTracker
             builder.Services.AddSingleton<IWorkoutLogRepository, SqliteWorkoutLogRepository>();
             builder.Services.AddSingleton<IExerciseRepository, SqliteExerciseRepository>();
             builder.Services.AddSingleton<IFitnessBackupService, SqliteFitnessBackupService>();
+            builder.Services.AddSingleton<IWorkoutStatisticsRepository, SqliteWorkoutStatisticsRepository>();
             builder.Services.AddTransient<BackupViewModel>();
             builder.Services.AddTransient<BackupPage>();
+            builder.Services.AddTransient<StatisticsViewModel>();
+            builder.Services.AddTransient<StatisticsPage>();
             builder.Services.AddTransient<ExerciseCatalogViewModel>();
             builder.Services.AddTransient<ExerciseCatalogPage>();
             builder.Services.AddTransient<WorkoutHistoryViewModel>();

@@ -231,6 +231,17 @@ Obnova **nahradí celý současný deník** obsahem zálohy. Sloučení do exist
 
 Import odmítne nepodporovanou budoucí verzi, poškozené či duplicitní ID, neplatné hodnoty i neexistující odkaz. Maximální velikost souboru je 25 MiB a každé pole entit může obsahovat nejvýše 100 000 položek; limity chrání aplikaci před neúměrnou alokací paměti. Před zápisem se nesmí kvůli validaci mazat, přejmenovávat ani jinak měnit současná data.
 
+## Statistiky
+
+První souhrn zahrnuje všechna uložená data, včetně rozpracovaných tréninků:
+
+- `WorkoutCount` počítá všechny tréninky; `FinishedWorkoutCount` jen ty s vyplněným `FinishedAt`.
+- `SetCount` počítá všechny uložené série.
+- `VolumeKilogramRepetitions` je součet `Repetitions × LoadGrams / 1000` v jednotce kg × opakování. Série s nezadanou zátěží (`null`) se nezapočítá; explicitní nula přispěje nulou.
+- V současném modelu je to jen součet zadané vnější zátěže. Nezahrnuje vlastní hmotnost, asistenci ani vzdálenost; nejde o fyzikální práci v joulech.
+
+Rozsah je zatím „celá historie“, bez filtru období. Repository načítá počty a série v jedné transakci. Výpočty je potřeba ručně porovnat s malým známým souborem dat před rozšířením statistik.
+
 ## Budoucí rozšíření
 
 Měření tělesné váhy dostane samostatnou entitu a tabulku. Šablona tréninku bude samostatná definice, ze které vznikne konkrétní trénink. Statistiky budou nejprve vypočítané nad existující historií.

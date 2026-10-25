@@ -18,11 +18,13 @@ FitnessTracker/
 ├── Application/
 │   ├── Workouts/
 │   ├── Backup/
+│   ├── Statistics/
 │   └── Exercises/
 ├── Features/
 │   ├── Workouts/
 │   ├── WorkoutHistory/
 │   ├── Backup/
+│   ├── Statistics/
 │   └── Exercises/
 ├── Infrastructure/
 │   └── Persistence/
@@ -169,6 +171,12 @@ Automatické ověření zahrnuje přesnost a null/0, změny katalogu, souběh, r
 - Import nejprve validuje celý soubor mimo databázový zápis. Po potvrzení uživatele nahradí celý lokální deník jedinou transakcí; zrušení nebo validační chyba současná data nemění.
 - Obnova zapisuje do stávajícího připojení v pořadí závislostí. Není potřeba vyměňovat soubor databáze ani obcházet `FitnessDatabase`; rollback transakce zachová původní obsah při chybě.
 - `IFitnessBackupService` odděluje souborový JSON kontrakt od obrazovky. `BackupPage` používá systémový výběr souboru a sdílení; uživatel sám zvolí cílové umístění exportu.
+
+### Statistiky v kroku 8
+
+- `IWorkoutStatisticsRepository` načte all-time souhrn v jedné SQLite transakci. Statistiky jsou čtecí modul; nezasahují do modelu ani zápisu tréninků.
+- Objem vychází jen z uložených opakování a zátěže v gramech. Jeho jednotka je kg × opakování; null zátěž se vynechává a nula zůstává nulovým příspěvkem.
+- `StatisticsPage` a `StatisticsViewModel` zobrazují základní počty a objem. V nové statistice nejprve popíšeme její význam a ověříme výpočet na známých datech.
 
 ### Katalog cviků v kroku 4
 

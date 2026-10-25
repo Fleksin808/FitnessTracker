@@ -5,7 +5,8 @@
         public AppShell(Features.Workouts.WorkoutPage workoutPage,
             Features.WorkoutHistory.WorkoutHistoryPage workoutHistoryPage,
             Features.Exercises.ExerciseCatalogPage exerciseCatalogPage,
-            Features.Backup.BackupPage backupPage)
+            Features.Backup.BackupPage backupPage,
+            Features.Statistics.StatisticsPage statisticsPage)
         {
             InitializeComponent();
 
@@ -17,6 +18,7 @@
             HistoryContent.Content = workoutHistoryPage;
             ExercisesContent.Content = exerciseCatalogPage;
             BackupContent.Content = backupPage;
+            StatisticsContent.Content = statisticsPage;
         }
     }
 }

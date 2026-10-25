@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:statistics="clr-namespace:FitnessTracker.Features.Statistics"
+             x:Class="FitnessTracker.Features.Statistics.StatisticsPage"
+             x:DataType="statistics:StatisticsViewModel"
+             Title="Statistiky">
+    <VerticalStackLayout Padding="24" Spacing="12">
+        <Label Text="Statistiky" Style="{StaticResource Headline}"
+               SemanticProperties.HeadingLevel="Level1" />
+        <Label Text="Přehled za celou historii. Zahrnuje i rozpracované tréninky." />
+        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
+            <Label Text="Tréninky celkem" />
+            <Label Grid.Column="1" Text="{Binding WorkoutCountText}" />
+            <Label Grid.Row="1" Text="Z toho ukončeno" />
+            <Label Grid.Row="1" Grid.Column="1" Text="{Binding FinishedCountText}" />
+            <Label Grid.Row="2" Text="Zaznamenané série" />
+            <Label Grid.Row="2" Grid.Column="1" Text="{Binding SetCountText}" />
+            <Label Grid.Row="3" Text="Objem zátěže" />
+            <Label Grid.Row="3" Grid.Column="1" Text="{Binding VolumeText}" />
+        </Grid>
+        <Label Text="Objem = součet opakování × zadaná vnější zátěž. Série bez zátěže se vynechávají." />
+        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+        <Button Text="Obnovit statistiky" Command="{Binding ReloadCommand}" />
+        <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="Red" />
+    </VerticalStackLayout>
+</ContentPage>
