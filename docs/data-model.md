@@ -260,8 +260,22 @@ Výskyt v šabloně odkazuje přes cizí klíč `ExerciseId` na katalog. Archiva
 
 SQLite schéma verze 4 přidává dvě tabulky s kaskádou z šablony na její položky a zákazem fyzického smazání použité definice. JSON v2 obsahuje `workoutTemplates` a `workoutTemplateExercises`; importer dál přijme JSON v1 a obnoví z něj deník bez šablon. Export vytváří pouze nejnovější verzi. Obnova v1 nahradí celý deník včetně vymazání místních šablon.
 
-## Budoucí rozšíření
+## Měření tělesné hmotnosti — datový kontrakt kroku 9
 
-Měření tělesné váhy dostane samostatnou entitu a tabulku. Šablona tréninku bude samostatná definice, ze které vznikne konkrétní trénink. Statistiky budou nejprve vypočítané nad existující historií.
+První tělesný údaj bude samostatné měření hmotnosti. Nemíchá se do `WorkoutSet`: série a tělesná hmotnost mají odlišný význam, časovou osu i způsob vykazování.
+
+| Pole | Typ v C# | Uložená hodnota | Pravidlo |
+| --- | --- | --- | --- |
+| `Id` | `Guid` | Kanonický text GUID `D` | Stabilní identifikátor |
+| `MeasuredAtUtc` | `DateTimeOffset` | UTC text ve formátu `O` | Okamžik pořízení záznamu |
+| `WeightGrams` | `long` | Celé gramy | Kladná hodnota; kg se převádí přesně |
+
+Stejný den může obsahovat více měření; časové razítko proto není unikátní klíč. Záznamy řadíme podle `MeasuredAt` sestupně a při shodě podle ID. UI zadává kilogramy a zobrazuje čas v místním pásmu zařízení. Převod kg ↔ gramy nezaokrouhluje vstup s nepodporovanou přesností. Počáteční verze pořizuje měření s aktuálním okamžikem UTC.
+
+Doménový model `BodyWeightMeasurement` a aplikační kontrakt `IBodyWeightMeasurementRepository` jsou připravené. První obrazovka umožní přidat měření, prohlížet historii a odstranit chybně zadanou hodnotu po potvrzení; úprava záznamu, grafy, cíle nebo další tělesné údaje jsou budoucí rozšíření.
+
+SQLite migrace `4 → 5` vytvoří tabulku `BodyWeightMeasurements` bez vazby na trénink. Záloha přejde na JSON v3 s polem `bodyWeightMeasurements`; importer bude dál přijímat v1 a v2. Starší formáty obnoví deník bez měření. Obnova zůstane úplnou náhradou všech lokálních dat v jediné transakci.
+
+GUID usnadňují budoucí slučování dat, ale samy neřeší synchronizaci. Před cloudem musíme navrhnout vlastnictví dat, konflikty, evidenci změn a propagaci mazání.
 
 GUID usnadňují budoucí slučování dat, ale samy neřeší synchronizaci. Před cloudem musíme navrhnout vlastnictví dat, konflikty, evidenci změn a propagaci mazání.

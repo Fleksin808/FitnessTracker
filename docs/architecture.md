@@ -14,18 +14,21 @@ Zpočátku používáme jeden MAUI projekt s oddělenými složkami. Složky a a
 FitnessTracker/
 ├── Domain/
 │   ├── Workouts/
-│   └── Exercises/
+│   ├── Exercises/
+│   └── BodyMeasurements/
 ├── Application/
 │   ├── Workouts/
 │   ├── Backup/
 │   ├── Statistics/
-│   └── Exercises/
+│   ├── Exercises/
+│   └── BodyMeasurements/
 ├── Features/
 │   ├── Workouts/
 │   ├── WorkoutHistory/
 │   ├── Backup/
 │   ├── Statistics/
-│   └── Exercises/
+│   ├── Exercises/
+│   └── BodyMeasurements/
 ├── Infrastructure/
 │   └── Persistence/
 ├── Resources/
@@ -100,7 +103,7 @@ Původní registrace `AddSingleton<IWorkoutRepository, InMemoryWorkoutRepository
 Používáme `sqlite-net-pcl` ve verzi `1.11.285`. Je to lehká knihovna s asynchronním API, kterou používá také oficiální příklad MAUI. Nepotřebujeme další ORM ani SQL ve ViewModelech. Verzi máme připnutou v projektu aplikace i integračního ověření.
 
 - `FitnessDatabase` dostane cestu z `MauiProgram` a vytváří sdílené připojení. Databáze se otevře při první operaci. `SemaphoreSlim` chrání inicializaci před souběhem a `finally` vždy uvolní čekající volání. `FullMutex` zajistí bezpečný režim připojení pro asynchronní API knihovny.
-- Inicializace zapne cizí klíče a v transakci provede chybějící migrace do aktuální verze 3: `0 → 1` vytváří tréninky, `1 → 2` přidává katalog cviků, `2 → 3` záznam cviků, sérií a konec tréninku. Verzi eviduje `PRAGMA user_version`. Chyba neoznačí inicializaci za dokončenou a umožní další pokus. Novější verze se odmítne; data se nemažou ani neresetují.
+- Inicializace zapne cizí klíče a v transakci provede migrace do aktuální verze 4: `0 → 1` vytváří tréninky, `1 → 2` přidává katalog cviků, `2 → 3` záznam cviků, sérií a konec tréninku, `3 → 4` přidává šablony. Verzi eviduje `PRAGMA user_version`. Chyba neoznačí inicializaci za dokončenou a umožní další pokus. Novější verze se odmítne; data se nemažou ani neresetují.
 - `WorkoutRow` reprezentuje databázové sloupce a převádí `Guid` a UTC čas na text. Pouze tento záznam má atribut SQLite a veřejné settery pro mapování. `Workout` nemá závislost na knihovně.
 - `SqliteWorkoutRepository` implementuje stejné rozhraní jako paměťová varianta. Přidání kontroluje ID a zapisuje v jedné transakci pomocí parametrů. Čtení mapuje záznamy přes `Workout.Restore` a vrací seřazený snímek pouze pro čtení. Poškozený záznam vyvolá chybu.
 - `MauiProgram` registruje databázi i repository jako singleton a předává cestu `Path.Combine(FileSystem.AppDataDirectory, FitnessDatabase.FileName)`. Připojení patří celému běhu aplikace. Záloha a výměna databázového souboru budou později vyžadovat koordinované uzavření připojení.
@@ -186,6 +189,13 @@ Automatické ověření zahrnuje přesnost a null/0, změny katalogu, souběh, r
 - SQLite schéma v4 přidává `WorkoutTemplates` a `WorkoutTemplateExercises`; položky se mažou kaskádou při smazání šablony a použitý cvik nelze fyzicky odstranit.
 - `SqliteFitnessBackupService` exportuje JSON v2, před obnovou validuje šablony a jejich odkazy a importuje také JSON v1. Obnova v1 nahradí celý lokální deník a odstraní i místní šablony.
 - `WorkoutTemplatesPage` a ViewModel tvoří vlastní záložku. Stránka zajišťuje navigaci a potvrzení smazání; operace a jejich stav řeší ViewModel.
+
+### Měření tělesných údajů v kroku 9
+
+- Měření tělesné hmotnosti dostane vlastní `Domain/BodyMeasurements`, `Application/BodyMeasurements`, `Features/BodyMeasurements` a implementaci v `Infrastructure/Persistence`. Stávající moduly tréninků a šablon zůstanou bez přímých závislostí na novém UI.
+- První rozsah je záznam, přehled a oprava překlepu odstraněním měření s potvrzením. `BodyWeightMeasurement` uchová ID, okamžik měření a hmotnost v celých gramech; více měření během jednoho dne je povoleno.
+- UI přijímá kg, ověřuje přesný převod na gramy a ukládá okamžik v UTC. Seznam řadí od nejnovějšího měření a zobrazuje čas v místním pásmu zařízení.
+- SQLite dostane migraci `4 → 5` a samostatnou tabulku. JSON záloha přejde na v3 a zachová import v1 i v2; starší verze nemají měření, proto jejich import vytvoří deník bez těchto záznamů.
 
 ### Katalog cviků v kroku 4
 

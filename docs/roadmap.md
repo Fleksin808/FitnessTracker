@@ -145,14 +145,20 @@ První statistiky jsou celoživotní a zahrnují i rozpracované tréninky. Obje
 
 Před uzavřením kroku ručně ověřit editaci a smazání šablon, vytvoření tréninku, nezávislost již vytvořeného tréninku na pozdější změně plánu, archivovaný cvik a export/obnovu JSON v1 i v2. Ruční ověření statistik na známém datasetu také zůstává otevřené.
 
-## Pozdější samostatné moduly
+## Další krok
 
-- Měření tělesné váhy a dalších tělesných údajů.
+- [x] Popsat samostatný datový kontrakt a hranice modulu.
+- [x] Přidat neměnný doménový model a aplikační repository kontrakt.
+- [ ] Uložit měření do SQLite migrací `4 → 5`.
+- [ ] Rozšířit JSON zálohu na v3 a dál importovat v1/v2.
+- [ ] Přidat záznam a historii do samostatné obrazovky; mazání chránit potvrzením.
+- [ ] Ručně ověřit převod jednotek, více měření v jednom dni, mazání a obnovu záloh.
+- Další tělesné údaje.
 - Cíle a připomínky.
 - Další typy cviků a měřených výkonů.
 - Účet, cloudová záloha a synchronizace po samostatném návrhu.
 
-Jejich pořadí určíme po dokončení lokálního deníku podle skutečných potřeb.
+Datový kontrakt kroku 9 je zapsán v `docs/data-model.md` a `docs/architecture.md`; model a repository rozhraní už existují. Další je SQLite migrace a záloha, následně obrazovka a ruční kontrola převodu, historie a obnovy. Ruční kontroly kroku 8 zůstávají otevřené a nemají se při pokračování přehlédnout.
 
 ## Kontrola dokončení každého kroku
 
