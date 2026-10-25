@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using FitnessTracker.Application.Backup;
 using FitnessTracker.Domain.Exercises;
 using FitnessTracker.Domain.Workouts;
+using FitnessTracker.Domain.WorkoutTemplates;
 using SQLite;
 
 namespace FitnessTracker.Infrastructure.Persistence;
@@ -11,7 +12,7 @@ namespace FitnessTracker.Infrastructure.Persistence;
 /// <summary>Mapuje mezi verzovaným souborem JSON a aktuálním schématem SQLite.</summary>
 public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitnessBackupService
 {
-    private const int FormatVersion = 1;
+    private const int FormatVersion = 2;
     private const int MaximumFileBytes = 25 * 1024 * 1024;
     private const int MaximumRowsPerEntity = 100_000;
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -28,7 +29,7 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         BackupDocument? document = null;
         await connection.RunInTransactionAsync(transaction =>
         {
-            // Jedna transakce zajistí, že všechny čtyři kolekce odpovídají stejnému okamžiku.
+            // Jedna transakce zajistí, že všechny kolekce odpovídají stejnému okamžiku.
             document = new BackupDocument
             {
                 FormatVersion = FormatVersion,
@@ -42,6 +43,13 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
                     .ThenBy(row => row.Position).ToList(),
                 WorkoutSets = transaction.Query<WorkoutSetRow>("SELECT * FROM WorkoutSets")
                     .Select(row => ToBackup(row.ToSet())).OrderBy(row => row.WorkoutExerciseId, StringComparer.Ordinal)
+                    .ThenBy(row => row.Position).ToList(),
+                WorkoutTemplates = transaction.Query<WorkoutTemplateRow>("SELECT * FROM WorkoutTemplates")
+                    .Select(row => ToBackup(row.ToTemplate(transaction.Query<WorkoutTemplateExerciseRow>(
+                        "SELECT * FROM WorkoutTemplateExercises WHERE TemplateId = ? ORDER BY Position", row.Id))))
+                    .OrderBy(row => row.Id, StringComparer.Ordinal).ToList(),
+                WorkoutTemplateExercises = transaction.Query<WorkoutTemplateExerciseRow>("SELECT * FROM WorkoutTemplateExercises")
+                    .Select(row => ToBackup(row.ToExercise())).OrderBy(row => row.TemplateId, StringComparer.Ordinal)
                     .ThenBy(row => row.Position).ToList()
             };
         }).ConfigureAwait(false);
@@ -49,8 +57,10 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         if (document is null)
             throw new InvalidOperationException("Nepodařilo se sestavit obsah zálohy.");
         if (document.Workouts.Count > MaximumRowsPerEntity || document.Exercises.Count > MaximumRowsPerEntity
-            || document.WorkoutExercises.Count > MaximumRowsPerEntity || document.WorkoutSets.Count > MaximumRowsPerEntity)
-            throw new InvalidOperationException("Záloha obsahuje příliš mnoho záznamů pro formát JSON v1.");
+            || document.WorkoutExercises.Count > MaximumRowsPerEntity || document.WorkoutSets.Count > MaximumRowsPerEntity
+            || document.WorkoutTemplates!.Count > MaximumRowsPerEntity
+            || document.WorkoutTemplateExercises!.Count > MaximumRowsPerEntity)
+            throw new InvalidOperationException("Záloha obsahuje příliš mnoho záznamů pro formát JSON v2.");
 
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(document, JsonOptions);
         if (bytes.Length > MaximumFileBytes)
@@ -63,7 +73,8 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         BackupDocument document = ParseAndValidate(json);
         DateTimeOffset exportedAt = ParseUtcTimestamp(document.ExportedAtUtc, "exportedAtUtc");
         return Task.FromResult(new BackupSummary(document.Workouts.Count, document.Exercises.Count,
-            document.WorkoutExercises.Count, document.WorkoutSets.Count, exportedAt));
+            document.WorkoutExercises.Count, document.WorkoutSets.Count, document.WorkoutTemplates?.Count ?? 0,
+            document.WorkoutTemplateExercises?.Count ?? 0, exportedAt));
     }
 
     public async Task RestoreAsync(ReadOnlyMemory<byte> json)
@@ -75,11 +86,17 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         {
             // Smažeme nejprve tréninky, aby jejich kaskády odstranily návazná data před katalogem.
             transaction.Execute("DELETE FROM Workouts");
+            transaction.Execute("DELETE FROM WorkoutTemplates");
             transaction.Execute("DELETE FROM Exercises");
 
             foreach (var row in document.Exercises)
                 transaction.Execute("INSERT INTO Exercises (Id, Name, IsArchived) VALUES (?, ?, ?)",
                     row.Id, row.Name, row.IsArchived ? 1 : 0);
+            foreach (var row in document.WorkoutTemplates ?? [])
+                transaction.Execute("INSERT INTO WorkoutTemplates (Id, Name) VALUES (?, ?)", row.Id, row.Name);
+            foreach (var row in document.WorkoutTemplateExercises ?? [])
+                transaction.Execute("INSERT INTO WorkoutTemplateExercises (Id, TemplateId, ExerciseId, Position) VALUES (?, ?, ?, ?)",
+                    row.Id, row.TemplateId, row.ExerciseId, row.Position);
             foreach (var row in document.Workouts)
             {
                 var workout = ToDomain(row);
@@ -109,10 +126,10 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         }
         catch (JsonException exception)
         {
-            throw new InvalidDataException("Soubor zálohy nemá platný formát JSON v1.", exception);
+            throw new InvalidDataException("Soubor zálohy nemá platný formát JSON v1 nebo v2.", exception);
         }
 
-        if (document.FormatVersion != FormatVersion)
+        if (document.FormatVersion is not (1 or FormatVersion))
             throw new InvalidDataException($"Verze zálohy {document.FormatVersion} není podporována.");
         if (document.Workouts is null || document.Exercises is null
             || document.WorkoutExercises is null || document.WorkoutSets is null)
@@ -120,6 +137,15 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         if (document.Workouts.Count > MaximumRowsPerEntity || document.Exercises.Count > MaximumRowsPerEntity
             || document.WorkoutExercises.Count > MaximumRowsPerEntity || document.WorkoutSets.Count > MaximumRowsPerEntity)
             throw new InvalidDataException("Záloha obsahuje příliš mnoho záznamů.");
+
+        if (document.FormatVersion == 1 && (document.WorkoutTemplates is not null || document.WorkoutTemplateExercises is not null))
+            throw new InvalidDataException("Záloha v1 nesmí obsahovat pole šablon.");
+        if (document.FormatVersion == FormatVersion
+            && (document.WorkoutTemplates is null || document.WorkoutTemplateExercises is null))
+            throw new InvalidDataException("V záloze v2 chybí povinná pole šablon.");
+        if ((document.WorkoutTemplates?.Count ?? 0) > MaximumRowsPerEntity
+            || (document.WorkoutTemplateExercises?.Count ?? 0) > MaximumRowsPerEntity)
+            throw new InvalidDataException("Záloha obsahuje příliš mnoho šablon nebo položek šablon.");
 
         _ = ParseUtcTimestamp(document.ExportedAtUtc, "exportedAtUtc");
         var workouts = new Dictionary<Guid, Workout>();
@@ -168,6 +194,44 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
             if (!setPositions.Add((ownerId, row.Position)))
                 throw new InvalidDataException("Záloha obsahuje duplicitní pořadí série.");
             _ = new WorkoutSet(id, ownerId, row.Position, row.Repetitions, row.LoadGrams);
+        }
+
+        var templateRows = document.WorkoutTemplates ?? [];
+        var templateIds = new HashSet<Guid>();
+        foreach (var row in templateRows)
+        {
+            if (row is null) throw new InvalidDataException("Seznam šablon obsahuje prázdnou položku.");
+            Guid id = ParseId(row.Id, "workoutTemplate.id");
+            if (!templateIds.Add(id)) throw new InvalidDataException("Záloha obsahuje duplicitní ID šablony.");
+            if (string.IsNullOrWhiteSpace(row.Name)) throw new InvalidDataException("Název šablony nesmí být prázdný.");
+        }
+
+        var templateExerciseIds = new HashSet<Guid>();
+        var templatePositions = new HashSet<(Guid TemplateId, int Position)>();
+        var templateExercisesByOwner = new Dictionary<Guid, List<WorkoutTemplateExercise>>();
+        foreach (var row in document.WorkoutTemplateExercises ?? [])
+        {
+            if (row is null) throw new InvalidDataException("Seznam položek šablon obsahuje prázdnou položku.");
+            Guid id = ParseId(row.Id, "workoutTemplateExercise.id");
+            Guid templateId = ParseId(row.TemplateId, "workoutTemplateExercise.templateId");
+            Guid exerciseId = ParseId(row.ExerciseId, "workoutTemplateExercise.exerciseId");
+            if (!templateIds.Contains(templateId) || !exercises.Contains(exerciseId))
+                throw new InvalidDataException("Položka šablony odkazuje na neexistující šablonu nebo cvik.");
+            if (!templateExerciseIds.Add(id)) throw new InvalidDataException("Záloha obsahuje duplicitní ID položky šablony.");
+            if (!templatePositions.Add((templateId, row.Position)))
+                throw new InvalidDataException("Záloha obsahuje duplicitní pořadí cviku v šabloně.");
+            var item = new WorkoutTemplateExercise(id, templateId, exerciseId, row.Position);
+            if (!templateExercisesByOwner.TryGetValue(templateId, out var ownerItems))
+                templateExercisesByOwner[templateId] = ownerItems = [];
+            ownerItems.Add(item);
+        }
+
+        foreach (var row in templateRows)
+        {
+            Guid id = ParseId(row.Id, "workoutTemplate.id");
+            if (!templateExercisesByOwner.TryGetValue(id, out var items))
+                throw new InvalidDataException("Šablona musí obsahovat alespoň jeden cvik.");
+            _ = WorkoutTemplate.Restore(id, row.Name, items);
         }
 
         return document;
@@ -222,6 +286,17 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         Position = set.Position, Repetitions = set.Repetitions, LoadGrams = set.LoadGrams
     };
 
+    private static WorkoutTemplateBackupRow ToBackup(WorkoutTemplate template) => new()
+    {
+        Id = template.Id.ToString("D"), Name = template.Name
+    };
+
+    private static WorkoutTemplateExerciseBackupRow ToBackup(WorkoutTemplateExercise exercise) => new()
+    {
+        Id = exercise.Id.ToString("D"), TemplateId = exercise.TemplateId.ToString("D"),
+        ExerciseId = exercise.ExerciseId.ToString("D"), Position = exercise.Position
+    };
+
     private sealed class BackupDocument
     {
         public BackupDocument() { }
@@ -231,6 +306,9 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         public required List<ExerciseBackupRow> Exercises { get; init; }
         public required List<WorkoutExerciseBackupRow> WorkoutExercises { get; init; }
         public required List<WorkoutSetBackupRow> WorkoutSets { get; init; }
+        // Nullable is intentional: older JSON v1 backups do not have these properties.
+        public List<WorkoutTemplateBackupRow>? WorkoutTemplates { get; init; }
+        public List<WorkoutTemplateExerciseBackupRow>? WorkoutTemplateExercises { get; init; }
     }
 
     private sealed class WorkoutBackupRow
@@ -268,5 +346,21 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         public required int Position { get; init; }
         public required int Repetitions { get; init; }
         public required long? LoadGrams { get; init; }
+    }
+
+    private sealed class WorkoutTemplateBackupRow
+    {
+        public WorkoutTemplateBackupRow() { }
+        public required string Id { get; init; }
+        public required string Name { get; init; }
+    }
+
+    private sealed class WorkoutTemplateExerciseBackupRow
+    {
+        public WorkoutTemplateExerciseBackupRow() { }
+        public required string Id { get; init; }
+        public required string TemplateId { get; init; }
+        public required string ExerciseId { get; init; }
+        public required int Position { get; init; }
     }
 }

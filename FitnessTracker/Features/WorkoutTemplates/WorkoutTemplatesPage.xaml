@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:templates="clr-namespace:FitnessTracker.Features.WorkoutTemplates"
+             xmlns:exercises="clr-namespace:FitnessTracker.Domain.Exercises"
+             x:Class="FitnessTracker.Features.WorkoutTemplates.WorkoutTemplatesPage"
+             x:Name="TemplatesPage"
+             x:DataType="templates:WorkoutTemplatesViewModel"
+             Title="Šablony">
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="12">
+            <Label Text="Šablony tréninků" Style="{StaticResource Headline}" />
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding LoadError}" />
+            <Label Text="{Binding StatusMessage}" />
+            <Button Text="Nová šablona" Command="{Binding NewCommand}" />
+            <VerticalStackLayout IsVisible="{Binding IsEditing}" Spacing="8">
+                <Label Text="Název šablony" />
+                <Entry Text="{Binding Name, Mode=TwoWay}" Placeholder="Například: Trénink A" />
+                <Picker Title="Vyber aktivní cvik" ItemsSource="{Binding AvailableExercises}"
+                        ItemDisplayBinding="{Binding Name, x:DataType=exercises:Exercise}"
+                        SelectedItem="{Binding SelectedExercise}" />
+                <Button Text="Přidat cvik" Command="{Binding AddExerciseCommand}" />
+                <CollectionView ItemsSource="{Binding PlannedExercises}" SelectionMode="None" HeightRequest="150">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="templates:WorkoutTemplateExerciseItem">
+                            <Grid ColumnDefinitions="*,Auto" Padding="0,4">
+                                <Label Text="{Binding Name}" VerticalOptions="Center" />
+                                <Button Grid.Column="1" Text="Odebrat"
+                                        Command="{Binding ViewModel.RemoveExerciseCommand, Source={x:Reference TemplatesPage}, x:DataType=templates:WorkoutTemplatesPage}"
+                                        CommandParameter="{Binding .}" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <Button Text="Uložit šablonu" Command="{Binding SaveCommand}" />
+                <Button Text="Zrušit" Command="{Binding CancelCommand}" />
+            </VerticalStackLayout>
+            <Button Text="Obnovit seznam" Command="{Binding RefreshCommand}" />
+            <CollectionView ItemsSource="{Binding Templates}" SelectionMode="None"
+                            EmptyView="Zatím tu nejsou žádné šablony.">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="templates:WorkoutTemplateItem">
+                        <VerticalStackLayout Padding="0,10" Spacing="5">
+                            <Label Text="{Binding Name}" FontAttributes="Bold" />
+                            <Label Text="{Binding ExerciseNames}" />
+                            <Button Text="Použít a vytvořit trénink" Clicked="OnUseTemplateClicked" />
+                            <Button Text="Upravit"
+                                    Command="{Binding ViewModel.EditCommand, Source={x:Reference TemplatesPage}, x:DataType=templates:WorkoutTemplatesPage}"
+                                    CommandParameter="{Binding .}" />
+                            <Button Text="Smazat" Clicked="OnDeleteTemplateClicked" />
+                        </VerticalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

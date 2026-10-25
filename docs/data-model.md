@@ -2,11 +2,11 @@
 
 ## Stav a rozsah
 
-Toto je návrh první verze deníku silových tréninků. Implementovány jsou tréninky, katalog cviků, záznam cviků a sérií v tréninku a přehled historie s filtrem podle data. SQLite schéma verze 3 obsahuje `Workouts`, `Exercises`, `WorkoutExercises` a `WorkoutSets`. Historie filtruje načtené tréninky podle místního kalendářního dne jejich začátku; vlastní okamžik zůstává uložen v UTC. Úpravy a mazání historie jsou další částí kroku 6 [roadmapy](roadmap.md).
+Implementovány jsou tréninky, katalog cviků, zaznamenané série, historie, statistiky a šablony. SQLite schéma verze 4 obsahuje také `WorkoutTemplates` a `WorkoutTemplateExercises`. Historie filtruje načtené tréninky podle místního kalendářního dne jejich začátku; vlastní okamžik zůstává uložen v UTC. Stav dalších kroků je v [roadmapě](roadmap.md).
 
 Aplikace ukládá hlavní data lokálně do SQLite. Databázový soubor `fitness-tracker.db3` je v datovém adresáři aplikace získaném přes MAUI `FileSystem.AppDataDirectory`, nikoliv pomocí pevné cesty na Windows nebo Androidu. Vytváří se při první práci s úložištěm. Běžné zavření aplikace soubor zachová; odinstalace nebo vymazání dat aplikace může data odstranit. Dosavadní čistě paměťové záznamy nejsou zdrojem pro automatickou migraci.
 
-Drobná nastavení patří do MAUI Preferences. JSON je plánovaný formát exportu a importu; není hlavním úložištěm.
+Drobná nastavení patří do MAUI Preferences. JSON v2 je verzovaný formát exportu a importu; není hlavním úložištěm. Import přijímá i původní JSON v1.
 
 ## Entity a vztahy
 
@@ -17,6 +17,9 @@ Exercise (definice cviku)
 Workout (trénink)
   1 → N WorkoutExercise
           1 → N WorkoutSet (série)
+
+WorkoutTemplate (plán)
+  1 → N WorkoutTemplateExercise → 1 Exercise
 ```
 
 Stejný cvik se může objevit ve více trénincích i vícekrát v jednom tréninku. Definice cviku neobsahuje opakování ani zátěž; ty patří konkrétní sérii.
@@ -226,7 +229,7 @@ Obnova **nahradí celý současný deník** obsahem zálohy. Sloučení do exist
 
 1. Soubor celý načteme a naparsujeme do přenosných DTO; databázi zatím neměníme.
 2. Ověříme verzi, povinné vlastnosti, limity vstupu, unikátní ID, hodnoty polí, pořadí, časové vztahy a všechny odkazy mezi poli. Doménové modely znovu ověří pravidla entit. Neznámá či chybějící data odmítneme.
-3. Teprve po kompletní validaci otevřeme jednu SQLite transakci. Odstraníme staré tréninky (kaskáda vyčistí jejich záznamy), poté staré definice cviků, a vložíme validované entity v pořadí `Exercises → Workouts → WorkoutExercises → WorkoutSets`.
+3. Teprve po kompletní validaci otevřeme jednu SQLite transakci. Odstraníme staré tréninky (kaskáda vyčistí jejich záznamy), šablony (kaskáda vyčistí položky) a poté definice cviků. Vložíme entity podle závislostí: `Exercises → WorkoutTemplates → WorkoutTemplateExercises → Workouts → WorkoutExercises → WorkoutSets`. Import v1 přeskočí prázdné kolekce šablon.
 4. Při jakékoliv chybě transakci vrátíme zpět, takže původní databáze zůstane celá. `user_version` se nemění; schéma zůstává odpovědností migrací aplikace.
 
 Import odmítne nepodporovanou budoucí verzi, poškozené či duplicitní ID, neplatné hodnoty i neexistující odkaz. Maximální velikost souboru je 25 MiB a každé pole entit může obsahovat nejvýše 100 000 položek; limity chrání aplikaci před neúměrnou alokací paměti. Před zápisem se nesmí kvůli validaci mazat, přejmenovávat ani jinak měnit současná data.
@@ -242,9 +245,9 @@ První souhrn zahrnuje všechna uložená data, včetně rozpracovaných trénin
 
 Rozsah je zatím „celá historie“, bez filtru období. Repository načítá počty a série v jedné transakci. Výpočty je potřeba ručně porovnat s malým známým souborem dat před rozšířením statistik.
 
-## Návrh šablon tréninku
+## Šablony tréninku
 
-Šablona zatím není v databázi implementována. Oddělíme definici plánu od skutečného výkonu:
+Šablona odděluje definici plánu od skutečného výkonu:
 
 | Entita | Navržená data | Význam |
 | --- | --- | --- |
@@ -255,7 +258,7 @@ Rozsah je zatím „celá historie“, bez filtru období. Repository načítá 
 
 Výskyt v šabloně odkazuje přes cizí klíč `ExerciseId` na katalog. Archivace definici nemaže, takže šablona zůstane zachovaná a zobrazitelná. Vytvoření tréninku vyžaduje, aby všechny její cviky byly aktivní; jinak se celá operace odmítne bez částečného tréninku.
 
-Ukládání šablon si vyžádá migraci SQLite `3 → 4` a dvě nové tabulky s kaskádou z šablony na její položky a zákazem fyzického smazání použité definice. Formát zálohy přejde na JSON v2 s poli `workoutTemplates` a `workoutTemplateExercises`; importer dál přijme JSON v1 a obnoví z něj deník bez šablon. Export bude vytvářet pouze nejnovější verzi.
+SQLite schéma verze 4 přidává dvě tabulky s kaskádou z šablony na její položky a zákazem fyzického smazání použité definice. JSON v2 obsahuje `workoutTemplates` a `workoutTemplateExercises`; importer dál přijme JSON v1 a obnoví z něj deník bez šablon. Export vytváří pouze nejnovější verzi. Obnova v1 nahradí celý deník včetně vymazání místních šablon.
 
 ## Budoucí rozšíření
 

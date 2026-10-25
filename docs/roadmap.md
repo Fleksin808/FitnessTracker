@@ -125,7 +125,7 @@ Mazání: potvrzovací dialog uvádí, že se smažou i zaznamenané cviky a sé
 
 Hotovo, když export a následná obnova zachovají údaje a neplatný import nezmění stávající data.
 
-Kontrakt je popsán v `docs/data-model.md`: JSON v1 je úplný snímek se všemi čtyřmi typy záznamů. `IFitnessBackupService` exportuje konzistentní snapshot, kontroluje velikost, verzi, položky a vztahy a obnovuje databázi v jediné transakci. `BackupPage` používá systémový výběr souboru a před náhradou deníku vyžádá potvrzení. Ještě je potřeba ručně ověřit export/obnovu a odmítnutí poškozené či nepodporované zálohy.
+Kontrakt je popsán v `docs/data-model.md`: JSON v1 je původní snímek čtyř typů záznamů; JSON v2 přidává šablony. `IFitnessBackupService` exportuje konzistentní snapshot, kontroluje velikost, verzi, položky a vztahy a obnovuje databázi v jediné transakci. `BackupPage` používá systémový výběr souboru a před náhradou deníku vyžádá potvrzení. Ještě je potřeba ručně ověřit export/obnovu a odmítnutí poškozené či nepodporované zálohy.
 
 ## 8. Statistiky a šablony
 
@@ -133,15 +133,17 @@ Kontrakt je popsán v `docs/data-model.md`: JSON v1 je úplný snímek se všemi
 - [x] Implementovat první souhrn v samostatné záložce Statistiky.
 - [ ] Ručně ověřit výpočty na známých datech včetně nezadané a nulové zátěže.
 - [x] Navrhnout šablony odděleně od zaznamenané historie.
-- [ ] Rozšířit zálohu na JSON v2 pro šablony a dál přijímat import v1.
-- [ ] Umožnit vytváření a úpravu šablon.
-- [ ] Umožnit vytvořit samostatný trénink ze šablony.
+- [x] Rozšířit zálohu na JSON v2 pro šablony a dál přijímat import v1.
+- [x] Umožnit vytváření a úpravu šablon.
+- [x] Umožnit vytvořit samostatný trénink ze šablony.
 
 Hotovo, když mají statistiky vysvětlený význam a změna šablony nemění dříve vytvořený trénink.
 
 První statistiky jsou celoživotní a zahrnují i rozpracované tréninky. Objem je součet `repetitions × loadGrams / 1000`; série s `loadGrams = null` se vynechá, nula přispívá nulou. Tělesná hmotnost, asistence a další typy měření nejsou součástí tohoto objemu. Před dalšími statistikami ověřit výsledky na známém malém datasetu.
 
-Návrh šablon: šablona obsahuje název a seřazené odkazy na definice cviků, nikoliv skutečné série nebo naměřený výkon. Vytvoření z ní založí nový samostatný trénink a zkopíruje aktuální názvy cviků do historie bez předvyplněných sérií. Změna či smazání šablony neovlivní dříve vytvořené tréninky. Archivovaný cvik zůstane v šabloně viditelný, ale před vytvořením tréninku musí být znovu aktivní. Přidání šablon vyžaduje SQLite migraci 3 → 4 a JSON zálohu v2; import v1 vytvoří deník bez šablon.
+Šablony jsou implementované jako samostatné plány s názvem a pořadím cviků. Obrazovka umožňuje vytvoření, úpravu, smazání s potvrzením a použití šablony. Použití založí samostatný trénink bez sérií; změna plánu neovlivní existující trénink. Archivovaný cvik zůstane zobrazený, ale jeho šablonu nelze spustit, dokud se cvik neobnoví nebo plán neupraví. SQLite schéma je v4, export používá JSON v2 a import v1 zůstává podporovaný.
+
+Před uzavřením kroku ručně ověřit editaci a smazání šablon, vytvoření tréninku, nezávislost již vytvořeného tréninku na pozdější změně plánu, archivovaný cvik a export/obnovu JSON v1 i v2. Ruční ověření statistik na známém datasetu také zůstává otevřené.
 
 ## Pozdější samostatné moduly
 

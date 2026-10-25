@@ -178,11 +178,14 @@ Automatické ověření zahrnuje přesnost a null/0, změny katalogu, souběh, r
 - Objem vychází jen z uložených opakování a zátěže v gramech. Jeho jednotka je kg × opakování; null zátěž se vynechává a nula zůstává nulovým příspěvkem.
 - `StatisticsPage` a `StatisticsViewModel` zobrazují základní počty a objem. V nové statistice nejprve popíšeme její význam a ověříme výpočet na známých datech.
 
-### Návrh šablon v kroku 8
+### Šablony v kroku 8
 
-- Šablony budou samostatný modul s vlastními modely a úložištěm; nepoužijí tabulky skutečných `WorkoutExercises` ani `WorkoutSets` k ukládání plánovaných hodnot.
-- Aplikační operace „vytvořit trénink ze šablony“ koordinuje založení tréninku i jeho cviků v jedné transakci. Jednorázový plánovaný obsah se kopíruje do skutečné historie jako nový záznam bez sérií.
-- Změna verze SQLite na 4 a JSON zálohy na v2 proběhne společně s implementací dat šablony. Importer zachová podporu stávajících záloh v1.
+- `Domain/WorkoutTemplates` obsahuje neměnný plán s názvem a seřazenými odkazy na cviky. Šablona neukládá výkon ani série; stejné cviky se v jednom plánu neopakují.
+- `Application/WorkoutTemplates/IWorkoutTemplateRepository` odděluje seznam, uložení, úpravu, smazání i použití plánu od SQLite a UI.
+- `SqliteWorkoutTemplateRepository` ukládá šablonu a její položky v transakci. Použití šablony v jediné transakci založí nový trénink a nové zaznamenané cviky bez sérií; přenese aktuální názvy cviků jako snímky. Archivovaný cvik operaci zastaví před potvrzením transakce.
+- SQLite schéma v4 přidává `WorkoutTemplates` a `WorkoutTemplateExercises`; položky se mažou kaskádou při smazání šablony a použitý cvik nelze fyzicky odstranit.
+- `SqliteFitnessBackupService` exportuje JSON v2, před obnovou validuje šablony a jejich odkazy a importuje také JSON v1. Obnova v1 nahradí celý lokální deník a odstraní i místní šablony.
+- `WorkoutTemplatesPage` a ViewModel tvoří vlastní záložku. Stránka zajišťuje navigaci a potvrzení smazání; operace a jejich stav řeší ViewModel.
 
 ### Katalog cviků v kroku 4
 

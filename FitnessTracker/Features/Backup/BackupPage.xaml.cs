@@ -66,6 +66,7 @@ public partial class BackupPage : ContentPage
                 await DisplayAlertAsync("Nahradit současná data?",
                     $"Záloha obsahuje {summary.WorkoutCount} tréninků, {summary.ExerciseCount} cviků, " +
                     $"{summary.WorkoutExerciseCount} zaznamenaných cviků a {summary.WorkoutSetCount} sérií. " +
+                    $"Záloha dále obsahuje {summary.WorkoutTemplateCount} šablon. " +
                     "Pokračováním nahradíš celý současný deník.",
                     "Nahradit data", "Zrušit"));
         }

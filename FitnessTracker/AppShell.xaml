@@ -12,6 +12,7 @@
         <ShellContent x:Name="ExercisesContent" Title="Cviky" Route="Exercises" />
         <ShellContent x:Name="BackupContent" Title="Záloha" Route="Backup" />
         <ShellContent x:Name="StatisticsContent" Title="Statistiky" Route="Statistics" />
+        <ShellContent x:Name="TemplatesContent" Title="Šablony" Route="Templates" />
     </TabBar>
 
 </Shell>
