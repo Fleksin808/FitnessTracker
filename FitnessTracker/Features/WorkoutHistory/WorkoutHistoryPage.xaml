@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:history="clr-namespace:FitnessTracker.Features.WorkoutHistory"
+             xmlns:models="clr-namespace:FitnessTracker.Features.WorkoutHistory"
+             x:Class="FitnessTracker.Features.WorkoutHistory.WorkoutHistoryPage"
+             x:DataType="history:WorkoutHistoryViewModel"
+             Title="Historie">
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+        <VerticalStackLayout Grid.Row="0" Spacing="8">
+            <Label Text="Historie tréninků" Style="{StaticResource Headline}"
+                   SemanticProperties.HeadingLevel="Level1" />
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                <Switch IsToggled="{Binding UseFromDate}" VerticalOptions="Center" />
+                <Label Grid.Column="1" Text="Od data" VerticalOptions="Center" />
+                <DatePicker Grid.Column="2" Date="{Binding FromDate}" IsEnabled="{Binding UseFromDate}" />
+            </Grid>
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                <Switch IsToggled="{Binding UseToDate}" VerticalOptions="Center" />
+                <Label Grid.Column="1" Text="Do data" VerticalOptions="Center" />
+                <DatePicker Grid.Column="2" Date="{Binding ToDate}" IsEnabled="{Binding UseToDate}" />
+            </Grid>
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Zrušit filtr" Command="{Binding ClearFilterCommand}" />
+                <Button Text="Obnovit" Command="{Binding ReloadCommand}" />
+                <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
+            </HorizontalStackLayout>
+            <Label Text="{Binding FilterMessage}" />
+            <Label Text="{Binding ErrorMessage}" TextColor="Red" />
+        </VerticalStackLayout>
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Workouts}"
+                        EmptyView="Pro zvolená data tu nejsou žádné tréninky"
+                        SelectionMode="Single" SelectionChanged="OnWorkoutSelectionChanged">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:WorkoutHistoryItem">
+                    <Grid Padding="8" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                        <Label Text="{Binding Name}" FontAttributes="Bold" />
+                        <Label Grid.Column="1" Text="{Binding StatusText}" />
+                        <Label Grid.Row="1" Text="{Binding StartedAtText}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

@@ -2,7 +2,7 @@
 
 ## Stav a rozsah
 
-Toto je návrh první verze deníku silových tréninků. Implementovány jsou tréninky, katalog cviků a záznam cviků a sérií v tréninku. SQLite schéma verze 3 obsahuje `Workouts`, `Exercises`, `WorkoutExercises` a `WorkoutSets`. Trénink lze ukončit; následné úpravy historie přidáme v kroku 6 [roadmapy](roadmap.md).
+Toto je návrh první verze deníku silových tréninků. Implementovány jsou tréninky, katalog cviků, záznam cviků a sérií v tréninku a přehled historie s filtrem podle data. SQLite schéma verze 3 obsahuje `Workouts`, `Exercises`, `WorkoutExercises` a `WorkoutSets`. Historie filtruje načtené tréninky podle místního kalendářního dne jejich začátku; vlastní okamžik zůstává uložen v UTC. Úpravy a mazání historie jsou další částí kroku 6 [roadmapy](roadmap.md).
 
 Aplikace ukládá hlavní data lokálně do SQLite. Databázový soubor `fitness-tracker.db3` je v datovém adresáři aplikace získaném přes MAUI `FileSystem.AppDataDirectory`, nikoliv pomocí pevné cesty na Windows nebo Androidu. Vytváří se při první práci s úložištěm. Běžné zavření aplikace soubor zachová; odinstalace nebo vymazání dat aplikace může data odstranit. Dosavadní čistě paměťové záznamy nejsou zdrojem pro automatickou migraci.
 

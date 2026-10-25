@@ -8,6 +8,7 @@
     <!-- Samostatné hlavní sekce sdílejí databázi, ale mají vlastní stránky a stav. -->
     <TabBar>
         <ShellContent x:Name="WorkoutsContent" Title="Tréninky" Route="Workouts" />
+        <ShellContent x:Name="HistoryContent" Title="Historie" Route="History" />
         <ShellContent x:Name="ExercisesContent" Title="Cviky" Route="Exercises" />
     </TabBar>
 

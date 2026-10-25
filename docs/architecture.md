@@ -20,6 +20,7 @@ FitnessTracker/
 │   └── Exercises/
 ├── Features/
 │   ├── Workouts/
+│   ├── WorkoutHistory/
 │   └── Exercises/
 ├── Infrastructure/
 │   └── Persistence/
@@ -149,7 +150,14 @@ Podklady: [Shell navigace a parametry](https://learn.microsoft.com/en-us/dotnet/
 - Detail poskytuje funkční ovládání pro výběr cviku, přidání série, posun cviků a sérií a ukončení. Po ukončení je záznam čitelný a příkazy zápisu zakázané. Vizuální úpravy odkládáme podle přání uživatele.
 - Přejmenování a archivace katalogu zůstávají nezávislé na zaznamenaném názvu. Cizí klíče chrání existující historii; fyzické mazání v produktu přijde později.
 
-Automatické ověření zahrnuje přesnost a null/0, změny katalogu, souběh, rollback přesunu i migrace, cizí klíče, kaskády a záznam mezi procesy. ViewModel byl ověřen se skutečnou SQLite databází včetně kultur cs-CZ/en-US, neplatného vstupu, přetečení, retry a blokace zápisu po ukončení. Praktické ověření nového detailu v MAUI zůstává otevřené.
+Automatické ověření zahrnuje přesnost a null/0, změny katalogu, souběh, rollback přesunu i migrace, cizí klíče, kaskády a záznam mezi procesy. ViewModel byl ověřen se skutečnou SQLite databází včetně kultur cs-CZ/en-US, neplatného vstupu, přetečení, retry a blokace zápisu po ukončení. Ruční ověření nového detailu uživatel potvrdil.
+
+### Historie tréninků v kroku 6
+
+- `Features/WorkoutHistory` má vlastní stránku, ViewModel a prezentační položku. Používá `IWorkoutRepository`; nevytváří druhé úložiště ani kopii doménového modelu.
+- Historie načte stejný seřazený snímek jako seznam. Volitelné meze filtru porovnávají místní kalendářní den `StartedAt`, protože uživatel pracuje s datem zobrazeným na zařízení. Samotný okamžik se v SQLite dál ukládá v UTC.
+- Řádek historie předává do stávajícího detailu pouze ID přes Shell navigaci. Filtr je v paměti, protože aktuální lokální deník načítá celý seznam; při růstu dat lze později přidat dotaz podle rozsahu do repository.
+- `AppShell` zpřístupňuje Historii vlastní záložkou vedle Tréninků a Cviků. Stránka a ViewModel jsou transient, sdílené repository zůstává singleton.
 
 ### Katalog cviků v kroku 4
 

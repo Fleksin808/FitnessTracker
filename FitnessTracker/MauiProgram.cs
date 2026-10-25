@@ -6,6 +6,7 @@ namespace FitnessTracker
     using Application.Workouts;
     using Application.Exercises;
     using Features.Exercises;
+    using Features.WorkoutHistory;
     using Infrastructure.Persistence;
     using Microsoft.Extensions.DependencyInjection;
 
@@ -35,6 +36,8 @@ namespace FitnessTracker
             builder.Services.AddSingleton<IExerciseRepository, SqliteExerciseRepository>();
             builder.Services.AddTransient<ExerciseCatalogViewModel>();
             builder.Services.AddTransient<ExerciseCatalogPage>();
+            builder.Services.AddTransient<WorkoutHistoryViewModel>();
+            builder.Services.AddTransient<WorkoutHistoryPage>();
 
             // Transient znamená novou instanci při každém vyžádání z DI.
             // DI podle konstruktorů sestaví AppShell → WorkoutPage → WorkoutViewModel.

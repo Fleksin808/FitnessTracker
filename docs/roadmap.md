@@ -90,22 +90,26 @@ Ruční kontrola: otevřít Cviky, vytvořit dva cviky, jeden přejmenovat, zkus
 - [x] Umožnit atomické přesuny cviků a sérií o jednu pozici.
 - [x] Přidat ukončení tréninku a ochranu před dalším zápisem.
 - [x] Automaticky ověřit transakce, pořadí, návaznosti, migrace a záznam mezi procesy.
-- [ ] Prakticky ověřit nový detail s cviky, sériemi, přesuny, ukončením a restartem.
+- [x] Prakticky ověřit nový detail s cviky, sériemi, přesuny, ukončením a restartem (potvrzeno uživatelem).
 
 Hotovo, když lze zaznamenat celý trénink, znovu ho načíst a jeho údaje zůstávají správné i po přejmenování definice cviku.
 
 Implementace kroku 5: detail používá `IWorkoutLogRepository`, načítá konzistentní snímek a aktivní katalog. SQLite drží kopii názvu a celé gramy. Přesuny používají dočasnou volnou pozici v transakci, po ukončení repository odmítá další změny. UI řídí stejné pravidlo a brání souběhu. Po úspěšném zápisu a chybě obnovy se další zápis blokuje do opětovného načtení. Windows a Android build i datové testy prošly, stejně jako ověření ViewModelu se skutečnou SQLite databází. Vzhled je záměrně bez redesignu.
 
-Ruční kontrola: otevřít rozpracovaný trénink, přidat dva cviky a jednomu více sérií (např. 8 opakování, 62,5 kg; prázdná zátěž; nula). Přesunout cvik i sérii, zkusit neplatný vstup, restartovat aplikaci a ověřit data. Přejmenování a archivace katalogového cviku nesmí přepsat zaznamenaný název. Ukončit trénink a ověřit, že záznam zůstává čitelný a další přidání není dostupné. U zařízení s anglickou kulturou použít desetinnou tečku.
+Ruční kontrolu nového detailu, zápisu sérií, změn pořadí, restartu a ukončení uživatel potvrdil.
 
 ## 6. Historie a úpravy
 
-- [ ] Přidat přehled historie a filtrování podle data.
+- [x] Přidat přehled historie a filtrování podle data.
 - [ ] Umožnit úpravu zaznamenaných údajů.
 - [ ] Přidat smazání tréninku s potvrzením v aplikaci.
 - [ ] Ověřit odstranění návazných dat a zachování katalogu cviků.
 
 Hotovo, když lze starý trénink najít, upravit a odstranit bez nekonzistentních záznamů.
+
+První část kroku 6: samostatná záložka Historie načte tréninky od repository a dovolí zapnout dolní a horní mez podle místního data začátku. Výběr řádku otevře existující detail podle ID. Filtr probíhá nad načteným snímkem v paměti; databázové schéma se nemění. Úpravy a mazání historie zůstávají dalšími částmi kroku.
+
+Ruční kontrola historie čeká: otevřít záložku, ověřit seznam a detail, zapnout filtr od data i do data, zadat období bez výsledků a zkusit počáteční datum po koncovém. Potom zrušit filtr a ověřit návrat všech záznamů.
 
 ## 7. Záloha a obnova
 

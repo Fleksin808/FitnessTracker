@@ -3,6 +3,7 @@
     public partial class AppShell : Shell
     {
         public AppShell(Features.Workouts.WorkoutPage workoutPage,
+            Features.WorkoutHistory.WorkoutHistoryPage workoutHistoryPage,
             Features.Exercises.ExerciseCatalogPage exerciseCatalogPage)
         {
             InitializeComponent();
@@ -12,6 +13,7 @@
 
             // DI sestaví stránku i ViewModel; Shell řeší pouze umístění v navigaci.
             WorkoutsContent.Content = workoutPage;
+            HistoryContent.Content = workoutHistoryPage;
             ExercisesContent.Content = exerciseCatalogPage;
         }
     }
