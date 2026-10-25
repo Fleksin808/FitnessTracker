@@ -233,6 +233,13 @@ Po každém dokončeném celku úprav (kódu, konfigurace i dokumentace) připra
 
 Report má stručný název, několik bodů s provedenými změnami a řádek `Ověřeno:` se skutečně provedenými kontrolami. Neprovedené kontroly nepovažujeme za úspěšné; podstatné zbývající ověření uvedeme výslovně. Při čistém vysvětlování bez úpravy souborů report není potřeba. Příprava reportu sama o sobě není pokyn k provedení commitu nebo pushnutí změn.
 
+## Přehled využití Codexu v projektových chatech
+
+- Počítáme uživatelské prompty samostatně v každém chatu. Začátek každé odpovědi uvede počítadlo od posledního přehledu, například `[2/5]`.
+- Po pátém promptu načteme aktuální account-wide limity Codexu a uvedeme zbývající procenta i textové ukazatele. Reportujeme přesné délky oken, které nástroj vrátí; pětihodinové okno nenazýváme denním limitem.
+- Pokud denní údaj nebo procento není dostupné, napíšeme to výslovně. Neodhadujeme spotřebu tokenů jednotlivého chatu; account-wide limit není token usage tohoto vlákna.
+- Po přehledu se počítadlo daného chatu vrací na nulu. Při ukončení práce navíc stručně zhodnotíme zahlcení vlákna, kvalitativně a bez vymyšleného přesného čísla tokenů.
+
 ## Dokumentace rozhodnutí
 
 - [Datový model](data-model.md) určuje význam a ukládání dat.
