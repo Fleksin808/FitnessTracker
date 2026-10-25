@@ -159,6 +159,7 @@ Automatické ověření zahrnuje přesnost a null/0, změny katalogu, souběh, r
 - Historie načte stejný seřazený snímek jako seznam. Volitelné meze filtru porovnávají místní kalendářní den `StartedAt`, protože uživatel pracuje s datem zobrazeným na zařízení. Samotný okamžik se v SQLite dál ukládá v UTC.
 - Řádek historie předává do stávajícího detailu pouze ID přes Shell navigaci. Filtr je v paměti, protože aktuální lokální deník načítá celý seznam; při růstu dat lze později přidat dotaz podle rozsahu do repository.
 - `AppShell` zpřístupňuje Historii vlastní záložkou vedle Tréninků a Cviků. Stránka a ViewModel jsou transient, sdílené repository zůstává singleton.
+- Detail si před smazáním vyžádá potvrzení v UI. `IWorkoutRepository.DeleteAsync` odstraňuje trénink v transakci; kaskády databáze mažou zaznamenané cviky a série, zatímco katalogové definice zůstávají.
 
 ### Katalog cviků v kroku 4
 

@@ -13,6 +13,8 @@
                 <Label Text="{Binding WorkoutName}" Style="{StaticResource Headline}" />
                 <Label Text="{Binding StartedAtText}" />
                 <Label Text="{Binding FinishedAtText}" />
+                <Button Text="Smazat trénink" Clicked="OnDeleteWorkoutClicked"
+                        IsEnabled="{Binding CanDeleteWorkout}" />
                 <VerticalStackLayout IsVisible="{Binding IsOpenWorkout}" Spacing="8">
                     <!-- Nabídka je katalog; následující picker vybírá konkrétní výskyt cviku v tréninku. -->
                     <Picker Title="Cvik z aktivního katalogu" ItemsSource="{Binding AvailableExercises}"

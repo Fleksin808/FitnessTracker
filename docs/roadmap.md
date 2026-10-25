@@ -15,7 +15,7 @@ Platí [architektura](architecture.md) a [datové dohody](data-model.md). Stav k
 - [x] Tato úprava prošla sestavením pro Windows.
 - [x] Návrh architektury, dat a pořadí práce je uložen v dokumentaci.
 
-Existuje model `Workout`, formulář, seznam a detail. Uživatel v chatu „Základní struktura“ potvrdil fungování detailu, návratu i opětovného otevření. Aplikace nyní používá SQLite; trvalost dat je automaticky ověřena mezi dvěma procesy. Zachování záznamů po restartu MAUI uživatel potvrdil. Telefon a kontrola detailů po restartu zůstávají otevřené. Funkčnost katalogu cviků uživatel potvrdil. Záznam cviků a sérií v tréninku je nyní implementovaný a automaticky ověřený; nová část detailu čeká na ruční kontrolu.
+Existuje model `Workout`, formulář, seznam a detail. Uživatel v chatu „Základní struktura“ potvrdil fungování detailu, návratu i opětovného otevření. Aplikace nyní používá SQLite; trvalost dat je automaticky ověřena mezi dvěma procesy. Zachování záznamů po restartu MAUI uživatel potvrdil. Telefon a kontrola detailů po restartu zůstávají otevřené. Funkčnost katalogu cviků i záznamu cviků a sérií uživatel potvrdil. Historie, úprava série a mazání tréninku jsou implementované; jejich ruční ověření zůstává otevřené.
 
 ## 1. MVVM a rozdělení odpovědností
 
@@ -102,7 +102,7 @@ Ruční kontrolu nového detailu, zápisu sérií, změn pořadí, restartu a uk
 
 - [x] Přidat přehled historie a filtrování podle data.
 - [x] Umožnit opravu opakování a zátěže zaznamenané série.
-- [ ] Přidat smazání tréninku s potvrzením v aplikaci.
+- [x] Přidat smazání tréninku s potvrzením v aplikaci.
 - [ ] Ověřit odstranění návazných dat a zachování katalogu cviků.
 
 Hotovo, když lze starý trénink najít, upravit a odstranit bez nekonzistentních záznamů.
@@ -112,6 +112,8 @@ První část kroku 6: samostatná záložka Historie načte tréninky od reposi
 Ruční kontrola historie čeká: otevřít záložku, ověřit seznam a detail, zapnout filtr od data i do data, zadat období bez výsledků a zkusit počáteční datum po koncovém. Potom zrušit filtr a ověřit návrat všech záznamů.
 
 Oprava série: v detailu lze otevřít editor uložené série a změnit opakování nebo zátěž. Jde o jedinou změnu povolenou také v ukončeném tréninku; nové série a přesuny zůstávají zakázané. Ručně ověřit validní a nevalidní vstup, prázdnou zátěž, nulu, uložení po restartu a opravu v ukončeném tréninku.
+
+Mazání: potvrzovací dialog uvádí, že se smažou i zaznamenané cviky a série a že katalog zůstane. Repository smaže trénink v transakci; SQLite cizí klíče provedou kaskádu. Ručně ověřit zrušení dialogu, potvrzené smazání rozpracovaného i ukončeného tréninku, zmizení z historie a zachování cviků v katalogu.
 
 ## 7. Záloha a obnova
 

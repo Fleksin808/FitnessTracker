@@ -14,6 +14,7 @@ namespace FitnessTracker.Features.Workouts;
 public sealed class WorkoutDetailViewModel : INotifyPropertyChanged
 {
     private readonly IWorkoutLogRepository repository;
+    private readonly IWorkoutRepository workoutRepository;
     private readonly IExerciseRepository exerciseRepository;
     private readonly ILogger<WorkoutDetailViewModel> logger;
     private readonly Command[] commands;
@@ -31,10 +32,12 @@ public sealed class WorkoutDetailViewModel : INotifyPropertyChanged
     private string? editRepetitionsInput;
     private string? editLoadKilogramsInput;
 
-    public WorkoutDetailViewModel(IWorkoutLogRepository repository, IExerciseRepository exerciseRepository,
+    public WorkoutDetailViewModel(IWorkoutLogRepository repository, IWorkoutRepository workoutRepository,
+        IExerciseRepository exerciseRepository,
         ILogger<WorkoutDetailViewModel> logger)
     {
         this.repository = repository;
+        this.workoutRepository = workoutRepository;
         this.exerciseRepository = exerciseRepository;
         this.logger = logger;
         var retry = new Command(async () => await LoadAsync(workoutId), () => !IsBusy && workoutId != Guid.Empty);
@@ -86,6 +89,7 @@ public sealed class WorkoutDetailViewModel : INotifyPropertyChanged
     public bool IsEditingSet => SelectedSetForEdit is not null;
     public string SelectedSetText => SelectedSetForEdit?.DisplayText ?? string.Empty;
     public bool CanEditRecordedData => Workout is not null && !IsBusy && !needsReload;
+    public bool CanDeleteWorkout => Workout is not null && !IsBusy;
     public string? StatusMessage { get => statusMessage; private set => SetField(ref statusMessage, value); }
 
     private WorkoutSetItem? SelectedSetForEdit
@@ -112,6 +116,7 @@ public sealed class WorkoutDetailViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(FinishedAtText));
             OnPropertyChanged(nameof(IsOpenWorkout));
             OnPropertyChanged(nameof(CanEditRecordedData));
+            OnPropertyChanged(nameof(CanDeleteWorkout));
             UpdateCommands();
         }
     }
@@ -257,6 +262,35 @@ public sealed class WorkoutDetailViewModel : INotifyPropertyChanged
     public async Task FinishAsync() =>
         await WriteAsync(() => repository.FinishAsync(workoutId, DateTimeOffset.Now), "Trénink ukončen.");
 
+    public async Task<bool> DeleteWorkoutAsync()
+    {
+        if (!CanDeleteWorkout) return false;
+        IsBusy = true;
+        ErrorMessage = null;
+        StatusMessage = null;
+        try
+        {
+            await workoutRepository.DeleteAsync(workoutId);
+            // Po úspěchu vyčistíme detail; stránka se vrátí do seznamu nebo historie.
+            Workout = null;
+            RecordedExercises.Clear();
+            AvailableExercises.Clear();
+            SelectedRecordedExercise = null;
+            SelectedExercise = null;
+            SelectedSetForEdit = null;
+            needsReload = true;
+            StatusMessage = "Trénink i jeho zaznamenané série byly smazány.";
+            return true;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Nepodařilo se smazat trénink {WorkoutId}.", workoutId);
+            ErrorMessage = "Trénink se nepodařilo smazat. Zkus to znovu.";
+            return false;
+        }
+        finally { IsBusy = false; }
+    }
+
     private async Task<bool> WriteAsync(Func<Task> operation, string successMessage, bool allowFinishedWorkout = false)
     {
         // Oprava uložené série je jediný zápis dovolený i u ukončeného tréninku.
@@ -326,6 +360,7 @@ public sealed class WorkoutDetailViewModel : INotifyPropertyChanged
     {
         OnPropertyChanged(nameof(CanRecord));
         OnPropertyChanged(nameof(CanEditRecordedData));
+        OnPropertyChanged(nameof(CanDeleteWorkout));
         foreach (var command in commands) command.ChangeCanExecute();
     }
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)

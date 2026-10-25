@@ -54,4 +54,16 @@ public sealed class SqliteWorkoutRepository : IWorkoutRepository
 
         return rows.Count == 0 ? null : rows[0].ToWorkout();
     }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        var connection = await database.GetConnectionAsync().ConfigureAwait(false);
+        await connection.RunInTransactionAsync(transaction =>
+        {
+            // Zapnuté cizí klíče v této databázi smažou cviky a série; katalog cviků zůstane nedotčen.
+            int deleted = transaction.Execute("DELETE FROM Workouts WHERE Id = ?", id.ToString("D"));
+            if (deleted == 0)
+                throw new KeyNotFoundException("Trénink není dostupný.");
+        }).ConfigureAwait(false);
+    }
 }

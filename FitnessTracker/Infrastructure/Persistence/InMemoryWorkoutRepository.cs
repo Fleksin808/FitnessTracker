@@ -57,4 +57,14 @@ public sealed class InMemoryWorkoutRepository : IWorkoutRepository
             return Task.FromResult(workout);
         }
     }
+
+    public Task DeleteAsync(Guid id)
+    {
+        lock (syncRoot)
+        {
+            if (!workouts.Remove(id))
+                throw new KeyNotFoundException("Trénink není dostupný.");
+        }
+        return Task.CompletedTask;
+    }
 }

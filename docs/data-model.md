@@ -94,7 +94,7 @@ V rozhraní zadává uživatel kilogramy. Převod používá `decimal`: `62,5 kg
 
 - Primární klíče jsou ID; návaznosti používají cizí klíče. V SQLite výslovně zapneme jejich vynucování pro každé připojení.
 - Pořadí cviku je unikátní v rámci tréninku; pořadí série je unikátní v rámci výskytu cviku.
-- Smazání tréninku odstraní jeho výskyty cviků a série.
+- Smazání tréninku odstraní jeho výskyty cviků a série. Repository provede příkaz v transakci; cizí klíče `ON DELETE CASCADE` smažou jen návazné řádky. Definice cviků v tabulce `Exercises` zůstávají.
 - Smazání výskytu cviku odstraní jeho série.
 - Definici cviku používanou v historii archivujeme. Fyzické smazání používané definice je zakázáno.
 - Zápis celého tréninku a operace s více návaznými záznamy probíhají v transakci.

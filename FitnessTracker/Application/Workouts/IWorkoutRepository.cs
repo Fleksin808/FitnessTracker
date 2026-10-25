@@ -31,4 +31,8 @@ public interface IWorkoutRepository
     /// </summary>
     // Otazník výslovně říká, že hledání nemusí najít žádný záznam.
     Task<Workout?> GetByIdAsync(Guid id);
+
+    /// <summary>Smaže trénink; databázové úložiště odstraní i jeho zaznamenané cviky a série.</summary>
+    /// <exception cref="KeyNotFoundException">Trénink s tímto ID neexistuje.</exception>
+    Task DeleteAsync(Guid id);
 }
