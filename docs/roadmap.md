@@ -154,14 +154,14 @@ Před uzavřením kroku ručně ověřit editaci a smazání šablon, vytvořen�
 - [x] Přidat záznam a historii do samostatné obrazovky; mazání chránit potvrzením.
 - [x] Potvrzeno uživatelem: uložené měření zůstává po znovuotevření aplikace.
 - [x] Uživatel ověřil převod `72,5 kg` a jeho zobrazení v historii.
-- [ ] Ručně ověřit více měření ve stejný den a zrušení/potvrzení smazání.
-- [ ] Ručně ověřit export a obnovu záloh JSON v1, v2 a v3.
+- [x] Uživatel potvrdil více měření ve stejný den a zrušení/potvrzení smazání.
+- [x] Uživatel potvrdil export a obnovu záloh JSON v1, v2 a v3.
 - Další tělesné údaje.
 - Cíle a připomínky.
 - Další typy cviků a měřených výkonů.
 - Účet, cloudová záloha a synchronizace po samostatném návrhu.
 
-Datový kontrakt kroku 9 je zapsán v `docs/data-model.md` a `docs/architecture.md`; model, repository rozhraní, SQLite tabulka, JSON v3 i obrazovka jsou implementované. Uživatel potvrdil zachování záznamu po znovuotevření aplikace a správný převod i zobrazení `72,5 kg`. Zbývá ověřit více měření ve stejný den, mazání a obnovu záloh. Ruční kontroly kroku 8 zůstávají otevřené a nemají se při pokračování přehlédnout.
+Krok 9 je implementovaný a uživatel potvrdil zachování měření po restartu, přesný převod i zobrazení `72,5 kg`, více záznamů za den, chování smazání i export a obnovu záloh v1, v2 a v3. Ruční kontroly statistik a šablon kroku 8 zůstávají otevřené.
 
 ## Kontrola dokončení každého kroku
 
