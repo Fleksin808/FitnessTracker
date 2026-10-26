@@ -149,8 +149,8 @@ Před uzavřením kroku ručně ověřit editaci a smazání šablon, vytvořen�
 
 - [x] Popsat samostatný datový kontrakt a hranice modulu.
 - [x] Přidat neměnný doménový model a aplikační repository kontrakt.
-- [ ] Uložit měření do SQLite migrací `4 → 5`.
-- [ ] Rozšířit JSON zálohu na v3 a dál importovat v1/v2.
+- [x] Uložit měření do SQLite migrací `4 → 5`.
+- [x] Rozšířit JSON zálohu na v3 a dál importovat v1/v2.
 - [ ] Přidat záznam a historii do samostatné obrazovky; mazání chránit potvrzením.
 - [ ] Ručně ověřit převod jednotek, více měření v jednom dni, mazání a obnovu záloh.
 - Další tělesné údaje.
@@ -158,7 +158,7 @@ Před uzavřením kroku ručně ověřit editaci a smazání šablon, vytvořen�
 - Další typy cviků a měřených výkonů.
 - Účet, cloudová záloha a synchronizace po samostatném návrhu.
 
-Datový kontrakt kroku 9 je zapsán v `docs/data-model.md` a `docs/architecture.md`; model a repository rozhraní už existují. Další je SQLite migrace a záloha, následně obrazovka a ruční kontrola převodu, historie a obnovy. Ruční kontroly kroku 8 zůstávají otevřené a nemají se při pokračování přehlédnout.
+Datový kontrakt kroku 9 je zapsán v `docs/data-model.md` a `docs/architecture.md`; model, repository rozhraní, SQLite tabulka i JSON v3 jsou implementované. Další je obrazovka a ruční kontrola převodu, historie, mazání a obnovy. Ruční kontroly kroku 8 zůstávají otevřené a nemají se při pokračování přehlédnout.
 
 ## Kontrola dokončení každého kroku
 

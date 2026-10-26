@@ -103,7 +103,7 @@ Původní registrace `AddSingleton<IWorkoutRepository, InMemoryWorkoutRepository
 Používáme `sqlite-net-pcl` ve verzi `1.11.285`. Je to lehká knihovna s asynchronním API, kterou používá také oficiální příklad MAUI. Nepotřebujeme další ORM ani SQL ve ViewModelech. Verzi máme připnutou v projektu aplikace i integračního ověření.
 
 - `FitnessDatabase` dostane cestu z `MauiProgram` a vytváří sdílené připojení. Databáze se otevře při první operaci. `SemaphoreSlim` chrání inicializaci před souběhem a `finally` vždy uvolní čekající volání. `FullMutex` zajistí bezpečný režim připojení pro asynchronní API knihovny.
-- Inicializace zapne cizí klíče a v transakci provede migrace do aktuální verze 4: `0 → 1` vytváří tréninky, `1 → 2` přidává katalog cviků, `2 → 3` záznam cviků, sérií a konec tréninku, `3 → 4` přidává šablony. Verzi eviduje `PRAGMA user_version`. Chyba neoznačí inicializaci za dokončenou a umožní další pokus. Novější verze se odmítne; data se nemažou ani neresetují.
+- Inicializace zapne cizí klíče a v transakci provede migrace do aktuální verze 5: `0 → 1` vytváří tréninky, `1 → 2` přidává katalog cviků, `2 → 3` záznam cviků, sérií a konec tréninku, `3 → 4` přidává šablony a `4 → 5` samostatná měření hmotnosti. Verzi eviduje `PRAGMA user_version`. Chyba neoznačí inicializaci za dokončenou a umožní další pokus. Novější verze se odmítne; data se nemažou ani neresetují.
 - `WorkoutRow` reprezentuje databázové sloupce a převádí `Guid` a UTC čas na text. Pouze tento záznam má atribut SQLite a veřejné settery pro mapování. `Workout` nemá závislost na knihovně.
 - `SqliteWorkoutRepository` implementuje stejné rozhraní jako paměťová varianta. Přidání kontroluje ID a zapisuje v jedné transakci pomocí parametrů. Čtení mapuje záznamy přes `Workout.Restore` a vrací seřazený snímek pouze pro čtení. Poškozený záznam vyvolá chybu.
 - `MauiProgram` registruje databázi i repository jako singleton a předává cestu `Path.Combine(FileSystem.AppDataDirectory, FitnessDatabase.FileName)`. Připojení patří celému běhu aplikace. Záloha a výměna databázového souboru budou později vyžadovat koordinované uzavření připojení.
@@ -170,7 +170,7 @@ Automatické ověření zahrnuje přesnost a null/0, změny katalogu, souběh, r
 
 ### Záloha a obnova v kroku 7
 
-- JSON v1 je přenosový kontrakt; databáze zůstává SQLite. Přenosné DTO a validace budou oddělené od doménových modelů a řádků SQLite.
+- JSON v3 je přenosový kontrakt; databáze zůstává SQLite. Import podporuje v1 a v2. Přenosné DTO a validace jsou oddělené od doménových modelů a řádků SQLite.
 - Import nejprve validuje celý soubor mimo databázový zápis. Po potvrzení uživatele nahradí celý lokální deník jedinou transakcí; zrušení nebo validační chyba současná data nemění.
 - Obnova zapisuje do stávajícího připojení v pořadí závislostí. Není potřeba vyměňovat soubor databáze ani obcházet `FitnessDatabase`; rollback transakce zachová původní obsah při chybě.
 - `IFitnessBackupService` odděluje souborový JSON kontrakt od obrazovky. `BackupPage` používá systémový výběr souboru a sdílení; uživatel sám zvolí cílové umístění exportu.
@@ -195,7 +195,7 @@ Automatické ověření zahrnuje přesnost a null/0, změny katalogu, souběh, r
 - Měření tělesné hmotnosti dostane vlastní `Domain/BodyMeasurements`, `Application/BodyMeasurements`, `Features/BodyMeasurements` a implementaci v `Infrastructure/Persistence`. Stávající moduly tréninků a šablon zůstanou bez přímých závislostí na novém UI.
 - První rozsah je záznam, přehled a oprava překlepu odstraněním měření s potvrzením. `BodyWeightMeasurement` uchová ID, okamžik měření a hmotnost v celých gramech; více měření během jednoho dne je povoleno.
 - UI přijímá kg, ověřuje přesný převod na gramy a ukládá okamžik v UTC. Seznam řadí od nejnovějšího měření a zobrazuje čas v místním pásmu zařízení.
-- SQLite dostane migraci `4 → 5` a samostatnou tabulku. JSON záloha přejde na v3 a zachová import v1 i v2; starší verze nemají měření, proto jejich import vytvoří deník bez těchto záznamů.
+- SQLite migrace `4 → 5` a `SqliteBodyWeightMeasurementRepository` ukládají měření do samostatné tabulky. JSON záloha přechází na v3 a zachovává import v1 i v2; starší verze nemají měření, proto jejich import vytvoří deník bez těchto záznamů.
 
 ### Katalog cviků v kroku 4
 

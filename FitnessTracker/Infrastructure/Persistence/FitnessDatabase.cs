@@ -6,7 +6,7 @@ namespace FitnessTracker.Infrastructure.Persistence;
 public sealed class FitnessDatabase
 {
     public const string FileName = "fitness-tracker.db3";
-    private const int CurrentSchemaVersion = 4;
+    private const int CurrentSchemaVersion = 5;
     private readonly SQLiteAsyncConnection connection;
     private readonly SemaphoreSlim initializationGate = new(1, 1);
     private bool initialized;
@@ -112,6 +112,21 @@ public sealed class FitnessDatabase
                             )
                             """);
                         database.Execute("PRAGMA user_version = 4");
+                        version = 4;
+                    }
+
+                    if (version == 4)
+                    {
+                        // Migrace 4 → 5 přidá samostatnou časovou řadu hmotnosti.
+                        database.Execute("""
+                            CREATE TABLE BodyWeightMeasurements (
+                                Id TEXT NOT NULL PRIMARY KEY,
+                                MeasuredAtUtc TEXT NOT NULL,
+                                WeightGrams INTEGER NOT NULL CHECK (WeightGrams > 0)
+                            )
+                            """);
+                        database.Execute("CREATE INDEX IX_BodyWeightMeasurements_MeasuredAtUtc ON BodyWeightMeasurements (MeasuredAtUtc DESC, Id)");
+                        database.Execute("PRAGMA user_version = 5");
                     }
                 }).ConfigureAwait(false);
 

@@ -2,11 +2,11 @@
 
 ## Stav a rozsah
 
-Implementovány jsou tréninky, katalog cviků, zaznamenané série, historie, statistiky a šablony. SQLite schéma verze 4 obsahuje také `WorkoutTemplates` a `WorkoutTemplateExercises`. Historie filtruje načtené tréninky podle místního kalendářního dne jejich začátku; vlastní okamžik zůstává uložen v UTC. Stav dalších kroků je v [roadmapě](roadmap.md).
+Implementovány jsou tréninky, katalog cviků, zaznamenané série, historie, statistiky a šablony. SQLite schéma verze 5 přidává `WorkoutTemplates`, `WorkoutTemplateExercises` a `BodyWeightMeasurements`. Historie filtruje načtené tréninky podle místního kalendářního dne jejich začátku; vlastní okamžik zůstává uložen v UTC. Stav dalších kroků je v [roadmapě](roadmap.md).
 
 Aplikace ukládá hlavní data lokálně do SQLite. Databázový soubor `fitness-tracker.db3` je v datovém adresáři aplikace získaném přes MAUI `FileSystem.AppDataDirectory`, nikoliv pomocí pevné cesty na Windows nebo Androidu. Vytváří se při první práci s úložištěm. Běžné zavření aplikace soubor zachová; odinstalace nebo vymazání dat aplikace může data odstranit. Dosavadní čistě paměťové záznamy nejsou zdrojem pro automatickou migraci.
 
-Drobná nastavení patří do MAUI Preferences. JSON v2 je verzovaný formát exportu a importu; není hlavním úložištěm. Import přijímá i původní JSON v1.
+Drobná nastavení patří do MAUI Preferences. JSON v3 je verzovaný formát exportu a importu; není hlavním úložištěm. Import přijímá také JSON v1 a v2.
 
 ## Entity a vztahy
 
@@ -272,9 +272,9 @@ První tělesný údaj bude samostatné měření hmotnosti. Nemíchá se do `Wo
 
 Stejný den může obsahovat více měření; časové razítko proto není unikátní klíč. Záznamy řadíme podle `MeasuredAt` sestupně a při shodě podle ID. UI zadává kilogramy a zobrazuje čas v místním pásmu zařízení. Převod kg ↔ gramy nezaokrouhluje vstup s nepodporovanou přesností. Počáteční verze pořizuje měření s aktuálním okamžikem UTC.
 
-Doménový model `BodyWeightMeasurement` a aplikační kontrakt `IBodyWeightMeasurementRepository` jsou připravené. První obrazovka umožní přidat měření, prohlížet historii a odstranit chybně zadanou hodnotu po potvrzení; úprava záznamu, grafy, cíle nebo další tělesné údaje jsou budoucí rozšíření.
+Doménový model `BodyWeightMeasurement`, kontrakt `IBodyWeightMeasurementRepository` a SQLite úložiště jsou připravené. První obrazovka umožní přidat měření, prohlížet historii a odstranit chybně zadanou hodnotu po potvrzení; úprava záznamu, grafy, cíle nebo další tělesné údaje jsou budoucí rozšíření.
 
-SQLite migrace `4 → 5` vytvoří tabulku `BodyWeightMeasurements` bez vazby na trénink. Záloha přejde na JSON v3 s polem `bodyWeightMeasurements`; importer bude dál přijímat v1 a v2. Starší formáty obnoví deník bez měření. Obnova zůstane úplnou náhradou všech lokálních dat v jediné transakci.
+SQLite migrace `4 → 5` vytvoří tabulku `BodyWeightMeasurements` bez vazby na trénink. Záloha přechází na JSON v3 s polem `bodyWeightMeasurements`; importer dál přijímá v1 a v2. Starší formáty obnoví deník bez měření. Obnova zůstává úplnou náhradou všech lokálních dat v jediné transakci.
 
 GUID usnadňují budoucí slučování dat, ale samy neřeší synchronizaci. Před cloudem musíme navrhnout vlastnictví dat, konflikty, evidenci změn a propagaci mazání.
 
