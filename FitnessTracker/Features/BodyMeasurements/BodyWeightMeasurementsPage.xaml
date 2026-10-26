@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:measurements="clr-namespace:FitnessTracker.Features.BodyMeasurements"
+             x:Class="FitnessTracker.Features.BodyMeasurements.BodyWeightMeasurementsPage"
+             x:Name="MeasurementsPage"
+             x:DataType="measurements:BodyWeightMeasurementsViewModel"
+             Title="Hmotnost">
+    <Grid Padding="20" RowDefinitions="Auto,*" RowSpacing="12">
+        <VerticalStackLayout Spacing="8">
+            <Label Text="Tělesná hmotnost" Style="{StaticResource Headline}"
+                   SemanticProperties.HeadingLevel="Level1" />
+            <Label Text="Zadej kilogramy. Záznam dostane čas pořízení a uloží se přesně na gramy." />
+            <Entry Text="{Binding WeightKilogramsInput, Mode=TwoWay}"
+                   Placeholder="Například 72,5 kg" Keyboard="Numeric"
+                   IsEnabled="{Binding CanInteract}"
+                   SemanticProperties.Description="Tělesná hmotnost v kilogramech" />
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Uložit měření" Command="{Binding AddCommand}" />
+                <Button Text="Obnovit" Command="{Binding ReloadCommand}" />
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            </HorizontalStackLayout>
+            <Label Text="{Binding StatusMessage}" />
+            <Label Text="{Binding ErrorMessage}" TextColor="Red" />
+            <Label Text="Historie měření" FontAttributes="Bold" />
+        </VerticalStackLayout>
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Measurements}" SelectionMode="None"
+                        EmptyView="Zatím nemáš uložené žádné měření.">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="measurements:BodyWeightMeasurementItem">
+                    <Grid Padding="8" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                        <Label Text="{Binding WeightText}" FontAttributes="Bold" />
+                        <Label Grid.Row="1" Text="{Binding MeasuredAtText}" />
+                        <Button Grid.Column="1" Grid.RowSpan="2" Text="Smazat"
+                                Clicked="OnDeleteMeasurementClicked"
+                                IsEnabled="{Binding ViewModel.CanInteract, Source={x:Reference MeasurementsPage}, x:DataType=measurements:BodyWeightMeasurementsPage}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

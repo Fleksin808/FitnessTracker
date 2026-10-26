@@ -192,9 +192,9 @@ Automatické ověření zahrnuje přesnost a null/0, změny katalogu, souběh, r
 
 ### Měření tělesných údajů v kroku 9
 
-- Měření tělesné hmotnosti dostane vlastní `Domain/BodyMeasurements`, `Application/BodyMeasurements`, `Features/BodyMeasurements` a implementaci v `Infrastructure/Persistence`. Stávající moduly tréninků a šablon zůstanou bez přímých závislostí na novém UI.
-- První rozsah je záznam, přehled a oprava překlepu odstraněním měření s potvrzením. `BodyWeightMeasurement` uchová ID, okamžik měření a hmotnost v celých gramech; více měření během jednoho dne je povoleno.
-- UI přijímá kg, ověřuje přesný převod na gramy a ukládá okamžik v UTC. Seznam řadí od nejnovějšího měření a zobrazuje čas v místním pásmu zařízení.
+- Modul měření tělesné hmotnosti má vlastní `Domain/BodyMeasurements`, `Application/BodyMeasurements`, `Features/BodyMeasurements` a implementaci v `Infrastructure/Persistence`. Stávající moduly tréninků a šablon zůstávají bez přímých závislostí na novém UI.
+- `BodyWeightMeasurementsPage` a ViewModel nabízejí záznam, přehled a smazání chybného měření s potvrzením. `BodyWeightMeasurement` uchovává ID, okamžik pořízení a hmotnost v celých gramech; více měření během jednoho dne je povoleno.
+- UI přijímá kg, ověřuje přesný převod na gramy a ukládá okamžik v UTC. Seznam řadí od nejnovějšího měření a zobrazuje čas v místním pásmu zařízení. DI přidává nové rozhraní, ViewModel a stránku jako vlastní záložku.
 - SQLite migrace `4 → 5` a `SqliteBodyWeightMeasurementRepository` ukládají měření do samostatné tabulky. JSON záloha přechází na v3 a zachovává import v1 i v2; starší verze nemají měření, proto jejich import vytvoří deník bez těchto záznamů.
 
 ### Katalog cviků v kroku 4

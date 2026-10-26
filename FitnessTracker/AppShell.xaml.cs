@@ -7,7 +7,8 @@
             Features.Exercises.ExerciseCatalogPage exerciseCatalogPage,
             Features.Backup.BackupPage backupPage,
             Features.Statistics.StatisticsPage statisticsPage,
-            Features.WorkoutTemplates.WorkoutTemplatesPage templatesPage)
+            Features.WorkoutTemplates.WorkoutTemplatesPage templatesPage,
+            Features.BodyMeasurements.BodyWeightMeasurementsPage bodyWeightMeasurementsPage)
         {
             InitializeComponent();
 
@@ -21,6 +22,7 @@
             BackupContent.Content = backupPage;
             StatisticsContent.Content = statisticsPage;
             TemplatesContent.Content = templatesPage;
+            BodyMeasurementsContent.Content = bodyWeightMeasurementsPage;
         }
     }
 }

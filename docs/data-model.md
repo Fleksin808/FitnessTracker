@@ -270,9 +270,9 @@ První tělesný údaj bude samostatné měření hmotnosti. Nemíchá se do `Wo
 | `MeasuredAtUtc` | `DateTimeOffset` | UTC text ve formátu `O` | Okamžik pořízení záznamu |
 | `WeightGrams` | `long` | Celé gramy | Kladná hodnota; kg se převádí přesně |
 
-Stejný den může obsahovat více měření; časové razítko proto není unikátní klíč. Záznamy řadíme podle `MeasuredAt` sestupně a při shodě podle ID. UI zadává kilogramy a zobrazuje čas v místním pásmu zařízení. Převod kg ↔ gramy nezaokrouhluje vstup s nepodporovanou přesností. Počáteční verze pořizuje měření s aktuálním okamžikem UTC.
+Stejný den může obsahovat více měření; časové razítko proto není unikátní klíč. Záznamy řadíme podle `MeasuredAtUtc` sestupně a při shodě podle ID. UI zadává kilogramy a zobrazuje čas v místním pásmu zařízení. Převod kg ↔ gramy nezaokrouhluje vstup s nepodporovanou přesností. Počáteční verze pořizuje měření s aktuálním okamžikem UTC.
 
-Doménový model `BodyWeightMeasurement`, kontrakt `IBodyWeightMeasurementRepository` a SQLite úložiště jsou připravené. První obrazovka umožní přidat měření, prohlížet historii a odstranit chybně zadanou hodnotu po potvrzení; úprava záznamu, grafy, cíle nebo další tělesné údaje jsou budoucí rozšíření.
+Doménový model `BodyWeightMeasurement`, kontrakt `IBodyWeightMeasurementRepository`, SQLite úložiště a obrazovka jsou implementované. Uživatel může přidat měření, prohlížet historii a po potvrzení odstranit chybný záznam; úprava, grafy, cíle nebo další tělesné údaje jsou budoucí rozšíření.
 
 SQLite migrace `4 → 5` vytvoří tabulku `BodyWeightMeasurements` bez vazby na trénink. Záloha přechází na JSON v3 s polem `bodyWeightMeasurements`; importer dál přijímá v1 a v2. Starší formáty obnoví deník bez měření. Obnova zůstává úplnou náhradou všech lokálních dat v jediné transakci.
 

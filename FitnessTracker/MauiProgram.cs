@@ -14,6 +14,7 @@ namespace FitnessTracker
     using Application.WorkoutTemplates;
     using Features.WorkoutTemplates;
     using Application.BodyMeasurements;
+    using Features.BodyMeasurements;
     using Infrastructure.Persistence;
     using Microsoft.Extensions.DependencyInjection;
 
@@ -45,6 +46,8 @@ namespace FitnessTracker
             builder.Services.AddSingleton<IWorkoutStatisticsRepository, SqliteWorkoutStatisticsRepository>();
             builder.Services.AddSingleton<IWorkoutTemplateRepository, SqliteWorkoutTemplateRepository>();
             builder.Services.AddSingleton<IBodyWeightMeasurementRepository, SqliteBodyWeightMeasurementRepository>();
+            builder.Services.AddTransient<BodyWeightMeasurementsViewModel>();
+            builder.Services.AddTransient<BodyWeightMeasurementsPage>();
             builder.Services.AddTransient<WorkoutTemplatesViewModel>();
             builder.Services.AddTransient<WorkoutTemplatesPage>();
             builder.Services.AddTransient<BackupViewModel>();
