@@ -50,6 +50,8 @@ public sealed class WorkoutTemplatesViewModel : INotifyPropertyChanged
         SaveCommand = new Command(async () => await SaveAsync(), () => !IsBusy);
         AddExerciseCommand = new Command(AddExercise, () => !IsBusy && SelectedExercise is not null);
         RemoveExerciseCommand = new Command<WorkoutTemplateExerciseItem>(RemoveExercise, _ => !IsBusy);
+        MoveExerciseUpCommand = new Command<WorkoutTemplateExerciseItem>(MoveExerciseUp, CanMoveExerciseUp);
+        MoveExerciseDownCommand = new Command<WorkoutTemplateExerciseItem>(MoveExerciseDown, CanMoveExerciseDown);
         NewCommand = new Command(StartNew, () => !IsBusy);
         EditCommand = new Command<WorkoutTemplateItem>(BeginEdit, _ => !IsBusy);
         DeleteCommand = new Command<WorkoutTemplateItem>(async item => await DeleteAsync(item), _ => !IsBusy);
@@ -57,6 +59,7 @@ public sealed class WorkoutTemplatesViewModel : INotifyPropertyChanged
         CancelCommand = new Command(CancelEdit, () => !IsBusy);
         RefreshCommand = new Command(async () => await LoadAsync(), () => !IsBusy);
         commands = [ (Command)SaveCommand, (Command)AddExerciseCommand, (Command)RemoveExerciseCommand,
+            (Command)MoveExerciseUpCommand, (Command)MoveExerciseDownCommand,
             (Command)NewCommand, (Command)EditCommand, (Command)DeleteCommand, (Command)UseCommand,
             (Command)CancelCommand, (Command)RefreshCommand ];
     }
@@ -68,6 +71,8 @@ public sealed class WorkoutTemplatesViewModel : INotifyPropertyChanged
     public ICommand SaveCommand { get; }
     public ICommand AddExerciseCommand { get; }
     public ICommand RemoveExerciseCommand { get; }
+    public ICommand MoveExerciseUpCommand { get; }
+    public ICommand MoveExerciseDownCommand { get; }
     public ICommand NewCommand { get; }
     public ICommand EditCommand { get; }
     public ICommand DeleteCommand { get; }
@@ -147,14 +152,39 @@ public sealed class WorkoutTemplatesViewModel : INotifyPropertyChanged
             return;
         }
         PlannedExercises.Add(new(SelectedExercise));
+        UpdateCommands();
         SelectedExercise = null;
         StatusMessage = null;
     }
 
     private void RemoveExercise(WorkoutTemplateExerciseItem? item)
     {
-        if (!IsBusy || item is null) return;
+        if (IsBusy || item is null) return;
         PlannedExercises.Remove(item);
+        UpdateCommands();
+    }
+
+    private bool CanMoveExerciseUp(WorkoutTemplateExerciseItem? item) =>
+        !IsBusy && item is not null && PlannedExercises.IndexOf(item) > 0;
+
+    private bool CanMoveExerciseDown(WorkoutTemplateExerciseItem? item) =>
+        !IsBusy && item is not null && PlannedExercises.IndexOf(item) >= 0 &&
+        PlannedExercises.IndexOf(item) < PlannedExercises.Count - 1;
+
+    private void MoveExerciseUp(WorkoutTemplateExerciseItem? item) => MoveExercise(item, -1);
+
+    private void MoveExerciseDown(WorkoutTemplateExerciseItem? item) => MoveExercise(item, 1);
+
+    private void MoveExercise(WorkoutTemplateExerciseItem? item, int offset)
+    {
+        if (IsBusy || item is null) return;
+        int currentIndex = PlannedExercises.IndexOf(item);
+        int targetIndex = currentIndex + offset;
+        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= PlannedExercises.Count) return;
+
+        // Pořadí v tomto seznamu se uloží jako pořadí cviků v šabloně.
+        PlannedExercises.Move(currentIndex, targetIndex);
+        UpdateCommands();
     }
 
     private void BeginEdit(WorkoutTemplateItem? item)
@@ -166,6 +196,7 @@ public sealed class WorkoutTemplatesViewModel : INotifyPropertyChanged
         PlannedExercises.Clear();
         foreach (var planned in item.Template.Exercises)
             if (exerciseCatalog.TryGetValue(planned.ExerciseId, out var exercise)) PlannedExercises.Add(new(exercise));
+        UpdateCommands();
         NotifyEditor();
         StatusMessage = null;
     }
@@ -217,6 +248,7 @@ public sealed class WorkoutTemplatesViewModel : INotifyPropertyChanged
             foreach (var planned in item.Template.Exercises)
                 if (AvailableExercises.FirstOrDefault(exercise => exercise.Id == planned.ExerciseId) is { } exercise)
                     PlannedExercises.Add(new(exercise));
+        UpdateCommands();
         NotifyEditor();
     }
 

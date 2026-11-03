@@ -24,9 +24,15 @@
                 <CollectionView ItemsSource="{Binding PlannedExercises}" SelectionMode="None" HeightRequest="150">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="templates:WorkoutTemplateExerciseItem">
-                            <Grid ColumnDefinitions="*,Auto" Padding="0,4">
+                            <Grid ColumnDefinitions="*,Auto,Auto,Auto" Padding="0,4">
                                 <Label Text="{Binding Name}" VerticalOptions="Center" />
-                                <Button Grid.Column="1" Text="Odebrat"
+                                <Button Grid.Column="1" Text="↑ Nahoru"
+                                        Command="{Binding ViewModel.MoveExerciseUpCommand, Source={x:Reference TemplatesPage}, x:DataType=templates:WorkoutTemplatesPage}"
+                                        CommandParameter="{Binding .}" />
+                                <Button Grid.Column="2" Text="↓ Dolů"
+                                        Command="{Binding ViewModel.MoveExerciseDownCommand, Source={x:Reference TemplatesPage}, x:DataType=templates:WorkoutTemplatesPage}"
+                                        CommandParameter="{Binding .}" />
+                                <Button Grid.Column="3" Text="Odebrat"
                                         Command="{Binding ViewModel.RemoveExerciseCommand, Source={x:Reference TemplatesPage}, x:DataType=templates:WorkoutTemplatesPage}"
                                         CommandParameter="{Binding .}" />
                             </Grid>
