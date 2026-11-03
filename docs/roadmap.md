@@ -138,6 +138,7 @@ Kontrakt je popsán v `docs/data-model.md`: JSON v1 je původní snímek čtyř 
 - [x] Rozšířit zálohu na JSON v2 pro šablony a dál přijímat import v1.
 - [x] Umožnit vytváření a úpravu šablon.
 - [x] Umožnit vytvořit samostatný trénink ze šablony.
+- [x] Uživatel ručně ověřil statistiky, šablony, nezávislost vytvořeného tréninku na změně či smazání šablony, archivovaný cvik a zálohy JSON v1 a v2.
 
 Hotovo, když mají statistiky vysvětlený význam a změna šablony nemění dříve vytvořený trénink.
 
@@ -145,7 +146,7 @@ První statistiky jsou celoživotní a zahrnují i rozpracované tréninky. Obje
 
 Šablony jsou implementované jako samostatné plány s názvem a pořadím cviků. Obrazovka umožňuje vytvoření, úpravu, změnu pořadí tlačítky Nahoru/Dolů, smazání s potvrzením a použití šablony. Použití založí samostatný trénink bez sérií; změna plánu neovlivní existující trénink. Archivovaný cvik zůstane zobrazený, ale jeho šablonu nelze spustit, dokud se cvik neobnoví nebo plán neupraví. SQLite schéma je v4, export používá JSON v2 a import v1 zůstává podporovaný.
 
-Ruční ověření statistik na známých datech, změny pořadí cviků, úpravy názvu šablony a exportu/obnovy JSON v1 a v2 uživatel potvrdil. Před uzavřením kroku zbývá ručně ověřit smazání šablon, vytvoření tréninku, nezávislost již vytvořeného tréninku na pozdější změně plánu a chování archivovaného cviku.
+Ruční ověření statistik na známých datech, změny pořadí a úpravy názvu šablony, smazání, vytvoření tréninku ze šablony, zachování již vytvořeného tréninku po změně či smazání šablony, chování archivovaného cviku a exportu/obnovy JSON v1 a v2 uživatel potvrdil. Krok 8 je dokončen.
 
 ## Další krok
 
@@ -163,7 +164,7 @@ Ruční ověření statistik na známých datech, změny pořadí cviků, úprav
 - Další typy cviků a měřených výkonů.
 - Účet, cloudová záloha a synchronizace po samostatném návrhu.
 
-Krok 9 je implementovaný a uživatel potvrdil zachování měření po restartu, přesný převod i zobrazení `72,5 kg`, více záznamů za den, chování smazání i export a obnovu záloh v1, v2 a v3. Ruční ověření statistik, změny pořadí cviků, úpravy názvu šablony a záloh JSON v1/v2 v kroku 8 uživatel také potvrdil; zbývají kontroly mazání šablon a vytvoření tréninku ze šablony.
+Krok 9 je implementovaný a uživatel potvrdil zachování měření po restartu, přesný převod i zobrazení `72,5 kg`, více záznamů za den, chování smazání i export a obnovu záloh v1, v2 a v3. Uživatel také potvrdil všechny ruční kontroly kroku 8; krok 8 je dokončen.
 
 ## Kontrola dokončení každého kroku
 
