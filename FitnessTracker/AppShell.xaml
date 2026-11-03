@@ -14,7 +14,7 @@
         <ShellContent x:Name="StatisticsContent" Title="Statistiky" Route="Statistics" />
         <ShellContent x:Name="TemplatesContent" Title="Šablony" Route="Templates" />
         <ShellContent x:Name="BodyMeasurementsContent" Title="Hmotnost" Route="BodyMeasurements" />
-        <ShellContent x:Name="WaistMeasurementsContent" Title="Obvod pasu" Route="WaistMeasurements" />
+        <ShellContent x:Name="MetricsContent" Title="Metriky" Route="Metrics" />
     </TabBar>
 
 </Shell>

@@ -68,7 +68,7 @@ public partial class BackupPage : ContentPage
                     $"{summary.WorkoutExerciseCount} zaznamenaných cviků a {summary.WorkoutSetCount} sérií. " +
                     $"Dále obsahuje {summary.WorkoutTemplateCount} šablon a " +
                     $"{summary.BodyWeightMeasurementCount} měření tělesné hmotnosti a " +
-                    $"{summary.WaistCircumferenceMeasurementCount} měření obvodu pasu. " +
+                    $"{summary.BodyMeasurementCount} tělesných metrik. " +
                     "Pokračováním nahradíš celý současný deník.",
                     "Nahradit data", "Zrušit"));
         }

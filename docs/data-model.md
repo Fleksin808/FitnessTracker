@@ -2,11 +2,11 @@
 
 ## Stav a rozsah
 
-Implementovány jsou tréninky, katalog cviků, zaznamenané série, historie, statistiky, šablony, hmotnost a obvod pasu. SQLite schéma verze 6 přidává `WorkoutTemplates`, `WorkoutTemplateExercises`, `BodyWeightMeasurements` a `WaistCircumferenceMeasurements`. Historie filtruje načtené tréninky podle místního kalendářního dne jejich začátku; vlastní okamžik zůstává uložen v UTC. Stav dalších kroků je v [roadmapě](roadmap.md).
+Implementovány jsou tréninky, katalog cviků, zaznamenané série, historie, statistiky, šablony, hmotnost a obvody částí těla. SQLite schéma verze 7 přidává `WorkoutTemplates`, `WorkoutTemplateExercises`, `BodyWeightMeasurements` a `BodyMeasurements`. Historie filtruje načtené tréninky podle místního kalendářního dne jejich začátku; vlastní okamžik zůstává uložen v UTC. Stav dalších kroků je v [roadmapě](roadmap.md).
 
 Aplikace ukládá hlavní data lokálně do SQLite. Databázový soubor `fitness-tracker.db3` je v datovém adresáři aplikace získaném přes MAUI `FileSystem.AppDataDirectory`, nikoliv pomocí pevné cesty na Windows nebo Androidu. Vytváří se při první práci s úložištěm. Běžné zavření aplikace soubor zachová; odinstalace nebo vymazání dat aplikace může data odstranit. Dosavadní čistě paměťové záznamy nejsou zdrojem pro automatickou migraci.
 
-Drobná nastavení patří do MAUI Preferences. JSON v4 je verzovaný formát exportu a importu; není hlavním úložištěm. Import přijímá také JSON v1, v2 a v3.
+Drobná nastavení patří do MAUI Preferences. JSON v5 je verzovaný formát exportu a importu; není hlavním úložištěm. Import přijímá také JSON v1 až v4.
 
 ## Entity a vztahy
 
@@ -234,7 +234,7 @@ Obnova **nahradí celý současný deník** obsahem zálohy. Sloučení do exist
 
 Import odmítne nepodporovanou budoucí verzi, poškozené či duplicitní ID, neplatné hodnoty i neexistující odkaz. Maximální velikost souboru je 25 MiB a každé pole entit může obsahovat nejvýše 100 000 položek; limity chrání aplikaci před neúměrnou alokací paměti. Před zápisem se nesmí kvůli validaci mazat, přejmenovávat ani jinak měnit současná data.
 
-JSON v2 přidává povinné kolekce šablon, v3 přidává měření hmotnosti a v4 přidává `waistCircumferenceMeasurements`. Novější verze zachovává pole z předchozích verzí. Import starší verze obnoví deník bez polí, která tehdy ještě neexistovala.
+JSON v2 přidává povinné kolekce šablon, v3 měření hmotnosti, v4 samostatný obvod pasu a v5 obecnou kolekci `bodyMeasurements` s částí těla u každého záznamu. Novější verze zachovává data z předchozích verzí. Import starší verze obnoví deník bez polí, která tehdy ještě neexistovala; v4 se při importu převede na obecný záznam části `Waist`.
 
 ## Statistiky
 
@@ -280,18 +280,19 @@ SQLite migrace `4 → 5` vytvoří tabulku `BodyWeightMeasurements` bez vazby na
 
 GUID usnadňují budoucí slučování dat, ale samy neřeší synchronizaci. Před cloudem musíme navrhnout vlastnictví dat, konflikty, evidenci změn a propagaci mazání.
 
-## Měření obvodu pasu — samostatné rozšíření tělesných údajů
+## Obvody částí těla
 
-Obvod pasu je samostatná časová řada. Nesdílí tabulku s hmotností, protože jde o jinou veličinu a jednotku; sdílí pouze pravidla ID, času, řazení a potvrzeného mazání.
+Obvody částí těla jsou samostatné od hmotnosti. Jedna tabulka ukládá konkrétní část těla jako stabilní hodnotu enumu, čas a velikost v celých milimetrech. Přidání další části těla rozšiřuje enum a nabídku UI; nevytváří novou tabulku.
 
 | Pole | Typ v C# | Uložená hodnota | Pravidlo |
 | --- | --- | --- | --- |
 | `Id` | `Guid` | Kanonický text GUID `D` | Stabilní identifikátor |
+| `BodyPart` | `BodyPart` enum | Název enumu jako TEXT | Například `Waist`, `Chest`, `LeftUpperArm` |
 | `MeasuredAtUtc` | `DateTimeOffset` | UTC text ve formátu `O` | Okamžik pořízení záznamu |
 | `CircumferenceMillimeters` | `long` | Celé milimetry | Kladná hodnota; cm se převádí přesně |
 
-UI přijímá centimetry a přesně převádí nejvýše desetinné místo na celé milimetry, například `82,5 cm → 825 mm`. Záznamy řadí podle času sestupně a při shodě podle ID. Více měření za den je povoleno; obrazovka zobrazuje místní čas zařízení.
+UI nabízí pas, hrudník, boky, krk, levou a pravou paži, stehno a lýtko. Přijímá centimetry a přesně převádí nejvýše desetinné místo na celé milimetry, například `82,5 cm → 825 mm`. Záznamy řadí podle času sestupně a při shodě podle ID. Více měření za den je povoleno; obrazovka zobrazuje místní čas zařízení a popis části těla.
 
-Doménový model `WaistCircumferenceMeasurement`, kontrakt `IWaistCircumferenceMeasurementRepository`, SQLite úložiště a samostatná stránka umožňují přidání, historii a smazání po potvrzení. SQLite migrace `5 → 6` přidává tabulku `WaistCircumferenceMeasurements`. Export přechází na JSON v4 s povinným polem `waistCircumferenceMeasurements`; import v1, v2 a v3 zůstává podporovaný. Obnova je stále úplnou náhradou dat v jediné transakci.
+Doménový model `BodyMeasurement`, enum `BodyPart`, kontrakt `IBodyMeasurementRepository`, SQLite úložiště a záložka Metriky umožňují přidání, historii a smazání po potvrzení. SQLite verze 7 ukládá záznamy v tabulce `BodyMeasurements`; migrace zachová případné záznamy z přechodného schématu 6. Export přechází na JSON v5 s povinným polem `bodyMeasurements`; importer dál přijímá v1 až v4. JSON v4 se převede na obecný záznam části `Waist`. Obnova je stále úplnou náhradou dat v jediné transakci.
 
 GUID usnadňují budoucí slučování dat, ale samy neřeší synchronizaci. Před cloudem musíme navrhnout vlastnictví dat, konflikty, evidenci změn a propagaci mazání.

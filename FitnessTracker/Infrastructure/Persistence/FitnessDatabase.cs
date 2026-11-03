@@ -6,7 +6,7 @@ namespace FitnessTracker.Infrastructure.Persistence;
 public sealed class FitnessDatabase
 {
     public const string FileName = "fitness-tracker.db3";
-    private const int CurrentSchemaVersion = 6;
+    private const int CurrentSchemaVersion = 7;
     private readonly SQLiteAsyncConnection connection;
     private readonly SemaphoreSlim initializationGate = new(1, 1);
     private bool initialized;
@@ -142,6 +142,30 @@ public sealed class FitnessDatabase
                             """);
                         database.Execute("CREATE INDEX IX_WaistCircumferenceMeasurements_MeasuredAtUtc ON WaistCircumferenceMeasurements (MeasuredAtUtc DESC, Id)");
                         database.Execute("PRAGMA user_version = 6");
+                        version = 6;
+                    }
+
+                    if (version == 6)
+                    {
+                        // Migrace 6 → 7 zobecní obvod pasu na více částí těla a zachová staré záznamy.
+                        database.Execute("""
+                            CREATE TABLE BodyMeasurements (
+                                Id TEXT NOT NULL PRIMARY KEY,
+                                BodyPart TEXT NOT NULL CHECK (BodyPart IN (
+                                    'Waist', 'Chest', 'Hips', 'Neck', 'LeftUpperArm', 'RightUpperArm',
+                                    'LeftThigh', 'RightThigh', 'LeftCalf', 'RightCalf')),
+                                MeasuredAtUtc TEXT NOT NULL,
+                                CircumferenceMillimeters INTEGER NOT NULL CHECK (CircumferenceMillimeters > 0)
+                            )
+                            """);
+                        database.Execute("""
+                            INSERT INTO BodyMeasurements (Id, BodyPart, MeasuredAtUtc, CircumferenceMillimeters)
+                            SELECT Id, 'Waist', MeasuredAtUtc, CircumferenceMillimeters
+                            FROM WaistCircumferenceMeasurements
+                            """);
+                        database.Execute("CREATE INDEX IX_BodyMeasurements_MeasuredAtUtc ON BodyMeasurements (MeasuredAtUtc DESC, Id)");
+                        database.Execute("DROP TABLE WaistCircumferenceMeasurements");
+                        database.Execute("PRAGMA user_version = 7");
                     }
                 }).ConfigureAwait(false);
 

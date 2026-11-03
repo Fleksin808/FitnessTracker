@@ -3,7 +3,7 @@ namespace FitnessTracker.Application.Backup;
 /// <summary>Počty záznamů ve validní záloze, které UI ukáže před potvrzením obnovy.</summary>
 public sealed record BackupSummary(int WorkoutCount, int ExerciseCount, int WorkoutExerciseCount,
     int WorkoutSetCount, int WorkoutTemplateCount, int WorkoutTemplateExerciseCount,
-    int BodyWeightMeasurementCount, int WaistCircumferenceMeasurementCount, DateTimeOffset ExportedAtUtc);
+    int BodyWeightMeasurementCount, int BodyMeasurementCount, DateTimeOffset ExportedAtUtc);
 
 /// <summary>Exportuje a atomicky obnovuje úplný snímek lokálního deníku.</summary>
 public interface IFitnessBackupService

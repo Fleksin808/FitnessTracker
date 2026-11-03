@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:measurements="clr-namespace:FitnessTracker.Features.BodyMeasurements"
+             x:Class="FitnessTracker.Features.BodyMeasurements.BodyMeasurementsPage"
+             x:Name="MeasurementsPage"
+             x:DataType="measurements:BodyMeasurementsViewModel"
+             Title="Metriky">
+    <Grid Padding="20" RowDefinitions="Auto,*" RowSpacing="12">
+        <VerticalStackLayout Spacing="8">
+            <Label Text="Tělesné metriky" Style="{StaticResource Headline}"
+                   SemanticProperties.HeadingLevel="Level1" />
+            <Label Text="Vyber část těla a zadej její obvod. Hmotnost má samostatnou záložku." />
+            <Picker Title="Část těla" ItemsSource="{Binding BodyParts}"
+                    ItemDisplayBinding="{Binding Name, x:DataType=measurements:BodyPartOption}"
+                    SelectedItem="{Binding SelectedBodyPart}" />
+            <Entry Text="{Binding CentimetersInput, Mode=TwoWay}"
+                   Placeholder="Například 82,5 cm" Keyboard="Numeric"
+                   IsEnabled="{Binding CanInteract}"
+                   SemanticProperties.Description="Obvod vybrané části těla v centimetrech" />
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Uložit měření" Command="{Binding AddCommand}" />
+                <Button Text="Obnovit" Command="{Binding ReloadCommand}" />
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            </HorizontalStackLayout>
+            <Label Text="{Binding StatusMessage}" />
+            <Label Text="{Binding ErrorMessage}" TextColor="Red" />
+            <Label Text="Historie všech částí těla" FontAttributes="Bold" />
+        </VerticalStackLayout>
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Measurements}" SelectionMode="None"
+                        EmptyView="Zatím nemáš uložená žádná měření.">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="measurements:BodyMeasurementItem">
+                    <Grid Padding="8" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                        <Label Text="{Binding BodyPartName}" FontAttributes="Bold" />
+                        <Label Grid.Row="1" Text="{Binding CircumferenceText}" />
+                        <Label Grid.Row="2" Text="{Binding MeasuredAtText}" />
+                        <Button Grid.Column="1" Grid.RowSpan="3" Text="Smazat"
+                                Clicked="OnDeleteMeasurementClicked"
+                                IsEnabled="{Binding ViewModel.CanInteract, Source={x:Reference MeasurementsPage}, x:DataType=measurements:BodyMeasurementsPage}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

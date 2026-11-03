@@ -9,30 +9,41 @@ using Microsoft.Extensions.Logging;
 
 namespace FitnessTracker.Features.BodyMeasurements;
 
-public sealed class WaistCircumferenceMeasurementsViewModel : INotifyPropertyChanged
+public sealed class BodyMeasurementsViewModel : INotifyPropertyChanged
 {
-    private readonly IWaistCircumferenceMeasurementRepository repository;
-    private readonly ILogger<WaistCircumferenceMeasurementsViewModel> logger;
+    private readonly IBodyMeasurementRepository repository;
+    private readonly ILogger<BodyMeasurementsViewModel> logger;
     private readonly Command addCommand;
     private readonly Command reloadCommand;
     private string? centimetersInput;
     private string? statusMessage;
     private string? errorMessage;
     private bool isBusy;
+    private BodyPartOption selectedBodyPart = BodyPartOption.All[0];
 
-    public WaistCircumferenceMeasurementsViewModel(IWaistCircumferenceMeasurementRepository repository,
-        ILogger<WaistCircumferenceMeasurementsViewModel> logger)
+    public BodyMeasurementsViewModel(IBodyMeasurementRepository repository,
+        ILogger<BodyMeasurementsViewModel> logger)
     {
         this.repository = repository;
         this.logger = logger;
-        addCommand = new Command(async () => await AddAsync(), () => !IsBusy);
+        addCommand = new Command(async () => await AddAsync(), () => !IsBusy && SelectedBodyPart is not null);
         reloadCommand = new Command(async () => await LoadAsync(), () => !IsBusy);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
-    public ObservableCollection<WaistCircumferenceMeasurementItem> Measurements { get; } = [];
+    public ObservableCollection<BodyMeasurementItem> Measurements { get; } = [];
+    public IReadOnlyList<BodyPartOption> BodyParts => BodyPartOption.All;
     public ICommand AddCommand => addCommand;
     public ICommand ReloadCommand => reloadCommand;
+    public BodyPartOption SelectedBodyPart
+    {
+        get => selectedBodyPart;
+        set
+        {
+            if (!SetField(ref selectedBodyPart, value)) return;
+            addCommand.ChangeCanExecute();
+        }
+    }
     public string? CentimetersInput { get => centimetersInput; set => SetField(ref centimetersInput, value); }
     public string? StatusMessage { get => statusMessage; private set => SetField(ref statusMessage, value); }
     public string? ErrorMessage { get => errorMessage; private set => SetField(ref errorMessage, value); }
@@ -57,7 +68,7 @@ public sealed class WaistCircumferenceMeasurementsViewModel : INotifyPropertyCha
         try { await RefreshAsync(); }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Nepodařilo se načíst měření obvodu pasu.");
+            logger.LogError(exception, "Nepodařilo se načíst tělesné metriky.");
             ErrorMessage = "Historii měření se nepodařilo načíst. Zkus obnovit seznam.";
         }
         finally { IsBusy = false; }
@@ -65,14 +76,14 @@ public sealed class WaistCircumferenceMeasurementsViewModel : INotifyPropertyCha
 
     public async Task AddAsync()
     {
-        if (IsBusy || !TryParseCentimeters(CentimetersInput, out long millimeters)) return;
+        if (IsBusy || SelectedBodyPart is null || !TryParseCentimeters(CentimetersInput, out long millimeters)) return;
         IsBusy = true;
         ErrorMessage = null;
         StatusMessage = null;
         try
         {
-            // Pořizovací čas vzniká při uložení; model jej normalizuje na UTC.
-            await repository.AddAsync(new WaistCircumferenceMeasurement(DateTimeOffset.UtcNow, millimeters));
+            // Jedna operace uloží vybranou část těla, přesnou hodnotu a čas pořízení.
+            await repository.AddAsync(new BodyMeasurement(SelectedBodyPart.Value, DateTimeOffset.UtcNow, millimeters));
             CentimetersInput = string.Empty;
             bool refreshed = await RefreshAsync();
             StatusMessage = refreshed ? "Měření uloženo."
@@ -80,13 +91,13 @@ public sealed class WaistCircumferenceMeasurementsViewModel : INotifyPropertyCha
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Nepodařilo se uložit měření obvodu pasu.");
+            logger.LogError(exception, "Nepodařilo se uložit tělesnou metriku.");
             ErrorMessage = "Měření se nepodařilo uložit. Zkus to znovu.";
         }
         finally { IsBusy = false; }
     }
 
-    public async Task DeleteAsync(WaistCircumferenceMeasurementItem? item)
+    public async Task DeleteAsync(BodyMeasurementItem? item)
     {
         if (IsBusy || item is null) return;
         IsBusy = true;
@@ -101,7 +112,7 @@ public sealed class WaistCircumferenceMeasurementsViewModel : INotifyPropertyCha
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Nepodařilo se smazat měření obvodu pasu {MeasurementId}.", item.Measurement.Id);
+            logger.LogError(exception, "Nepodařilo se smazat metriku {MeasurementId}.", item.Measurement.Id);
             ErrorMessage = exception is KeyNotFoundException
                 ? "Toto měření už není dostupné. Obnov seznam."
                 : "Měření se nepodařilo smazat. Zkus to znovu.";
@@ -122,7 +133,7 @@ public sealed class WaistCircumferenceMeasurementsViewModel : INotifyPropertyCha
             return false;
         }
 
-        // Centimetry převedeme na celé milimetry, aby SQLite neukládalo desetinné hodnoty.
+        // Uložené milimetry jsou celočíselné; vstup s jemnější přesností odmítneme bez zaokrouhlení.
         millimeters = (long)(centimeters * 10m);
         return true;
     }
@@ -133,13 +144,13 @@ public sealed class WaistCircumferenceMeasurementsViewModel : INotifyPropertyCha
         {
             var loaded = await repository.GetAllAsync();
             Measurements.Clear();
-            foreach (var measurement in loaded) Measurements.Add(new WaistCircumferenceMeasurementItem(measurement));
+            foreach (var measurement in loaded) Measurements.Add(new BodyMeasurementItem(measurement));
             ErrorMessage = null;
             return true;
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Nepodařilo se obnovit historii měření obvodu pasu.");
+            logger.LogError(exception, "Nepodařilo se obnovit přehled tělesných metrik.");
             ErrorMessage = "Historii měření se nepodařilo načíst. Zkus obnovit seznam.";
             return false;
         }

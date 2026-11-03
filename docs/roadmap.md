@@ -158,16 +158,16 @@ Ruční ověření statistik na známých datech, změny pořadí a úpravy náz
 
 Krok 9 je dokončený a ručně ověřený uživatelem.
 
-## 10. Měření obvodu pasu
+## 10. Tělesné metriky podle částí těla
 
-- [x] Popsat samostatný datový kontrakt a hranice měření obvodu pasu.
+- [x] Popsat datovou dohodu pro více obvodů částí těla v jednom modulu.
 - [x] Přidat neměnný doménový model a aplikační repository kontrakt.
-- [x] Uložit měření do SQLite migrací `5 → 6`.
-- [x] Rozšířit JSON zálohu na v4 a dál importovat v1/v2/v3.
+- [x] Uložit metriky do SQLite schématu 7 a zachovat záznamy z přechodného schématu 6.
+- [x] Rozšířit JSON zálohu na v5 a dál importovat v1 až v4.
 - [x] Přidat zadání, historii a potvrzené mazání na samostatnou obrazovku.
-- [ ] Ručně ověřit převod cm na mm, zachování po restartu, mazání a zálohu v4.
+- [ ] Ručně ověřit části těla, převod cm na mm, zachování po restartu, mazání a zálohu v5.
 
-Obvod pasu je samostatná časová řada v milimetrech. UI přijímá centimetry s přesností do desetiny centimetru; `82,5 cm` se uloží jako `825 mm`. SQLite tabulka a JSON pole jsou oddělené od hmotnosti. Ruční ověření nové obrazovky, migrace na telefonu a exportu/obnovy v4 ještě čeká.
+Záložka Metriky umožňuje zaznamenat pas, hrudník, boky, krk a levou či pravou paži, stehno a lýtko. Hodnoty se ukládají v milimetrech do společné tabulky s typem části těla. JSON v5 používá `bodyMeasurements`; importer v4 převede dřívější pole obvodu pasu. Ruční ověření nové obrazovky, migrace na telefonu a exportu/obnovy v5 ještě čeká.
 
 ## Další nápady
 

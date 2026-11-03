@@ -9,7 +9,7 @@
             Features.Statistics.StatisticsPage statisticsPage,
             Features.WorkoutTemplates.WorkoutTemplatesPage templatesPage,
             Features.BodyMeasurements.BodyWeightMeasurementsPage bodyWeightMeasurementsPage,
-            Features.BodyMeasurements.WaistCircumferenceMeasurementsPage waistMeasurementsPage)
+            Features.BodyMeasurements.BodyMeasurementsPage bodyMeasurementsPage)
         {
             InitializeComponent();
 
@@ -24,7 +24,7 @@
             StatisticsContent.Content = statisticsPage;
             TemplatesContent.Content = templatesPage;
             BodyMeasurementsContent.Content = bodyWeightMeasurementsPage;
-            WaistMeasurementsContent.Content = waistMeasurementsPage;
+            MetricsContent.Content = bodyMeasurementsPage;
         }
     }
 }
