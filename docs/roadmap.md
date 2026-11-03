@@ -8,6 +8,8 @@ Každý krok zahrnuje vysvětlení návrhu, komentáře u podstatné logiky, pra
 
 Platí [architektura](architecture.md) a [datové dohody](data-model.md). Stav kroku měníme až podle skutečně dokončené práce.
 
+Dlouhodobé nápady, které zatím nejsou součástí plánu implementace, jsou zapsané ve [vizi FitnessTrackeru](vision.md).
+
 ## Výchozí stav
 
 - [x] Existuje výchozí .NET MAUI projekt.

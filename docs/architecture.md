@@ -240,11 +240,11 @@ Každý krok má malé změny, vysvětlení toku dat a praktické ověření. Au
 
 Vzhled zatím upravujeme jen pro základní použitelnost, při zachování pořadí funkcí v roadmapě. Sdílený styl `Button` v `Resources/Styles/Styles.xaml` používá odsazení `18,12`, minimální výšku 48, minimální šířku 140, maximální šířku 320 a zarovnání vlevo. Výška může růst s textem, například při větším systémovém písmu. Příkazy, bindingy a datová logika se tím nemění. Komplexní návrh UI zůstává odložený do dokončení základní funkčnosti.
 
-## Report pro git commit
+## Report připravený pro Git commit
 
-Po každém dokončeném celku úprav (kódu, konfigurace i dokumentace) připravíme v závěrečné odpovědi krátký český report vhodný ke zkopírování jako zpráva git commitu. Pravidlo platí pro všechny chaty projektu FitnessTracker.
+Po každém dokončeném zadání, které mění projekt (kód, UI, konfiguraci, dokumentaci nebo jiné soubory), zakončíme odpověď stručným blokem `Připraveno ke zkopírování` vhodným pro Git commit. Pravidlo platí pro všechny chaty projektu FitnessTracker.
 
-Report má stručný název, několik bodů s provedenými změnami a řádek `Ověřeno:` se skutečně provedenými kontrolami. Neprovedené kontroly nepovažujeme za úspěšné; podstatné zbývající ověření uvedeme výslovně. Při čistém vysvětlování bez úpravy souborů report není potřeba. Příprava reportu sama o sobě není pokyn k provedení commitu nebo pushnutí změn.
+Blok dáme do jediného code blocku, aby šel zkopírovat najednou. Obsahuje vhodný název commitu, krátké body změn a část `Ověřeno` pouze se skutečně provedenými kontrolami. Neprovedené kontroly uvedeme samostatně pod `Zbývá ověřit`. Při čistém vysvětlování bez změny souborů tento blok není potřeba. Commit ani push neprovádíme automaticky.
 
 ## Přehled využití Codexu v projektových chatech
 
