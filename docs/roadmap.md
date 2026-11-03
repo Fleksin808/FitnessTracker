@@ -145,7 +145,7 @@ První statistiky jsou celoživotní a zahrnují i rozpracované tréninky. Obje
 
 Šablony jsou implementované jako samostatné plány s názvem a pořadím cviků. Obrazovka umožňuje vytvoření, úpravu, změnu pořadí tlačítky Nahoru/Dolů, smazání s potvrzením a použití šablony. Použití založí samostatný trénink bez sérií; změna plánu neovlivní existující trénink. Archivovaný cvik zůstane zobrazený, ale jeho šablonu nelze spustit, dokud se cvik neobnoví nebo plán neupraví. SQLite schéma je v4, export používá JSON v2 a import v1 zůstává podporovaný.
 
-Ruční ověření statistik na známých datech uživatel potvrdil. Před uzavřením kroku ručně ověřit editaci, změnu pořadí tlačítky Nahoru/Dolů a smazání šablon, vytvoření tréninku, nezávislost již vytvořeného tréninku na pozdější změně plánu, archivovaný cvik a export/obnovu JSON v1 i v2.
+Ruční ověření statistik na známých datech i změny pořadí cviků v editoru šablon uživatel potvrdil. Před uzavřením kroku zbývá ručně ověřit editaci a smazání šablon, vytvoření tréninku, nezávislost již vytvořeného tréninku na pozdější změně plánu, chování archivovaného cviku a export/obnovu JSON v1 i v2.
 
 ## Další krok
 
@@ -163,7 +163,7 @@ Ruční ověření statistik na známých datech uživatel potvrdil. Před uzav�
 - Další typy cviků a měřených výkonů.
 - Účet, cloudová záloha a synchronizace po samostatném návrhu.
 
-Krok 9 je implementovaný a uživatel potvrdil zachování měření po restartu, přesný převod i zobrazení `72,5 kg`, více záznamů za den, chování smazání i export a obnovu záloh v1, v2 a v3. Ruční ověření statistik kroku 8 uživatel také potvrdil; zbývají ruční kontroly šablon včetně nově doplněného přesouvání cviků.
+Krok 9 je implementovaný a uživatel potvrdil zachování měření po restartu, přesný převod i zobrazení `72,5 kg`, více záznamů za den, chování smazání i export a obnovu záloh v1, v2 a v3. Ruční ověření statistik a změny pořadí cviků v šablonách kroku 8 uživatel také potvrdil; ostatní ruční kontroly šablon zůstávají otevřené.
 
 ## Kontrola dokončení každého kroku
 
