@@ -148,23 +148,35 @@ První statistiky jsou celoživotní a zahrnují i rozpracované tréninky. Obje
 
 Ruční ověření statistik na známých datech, změny pořadí a úpravy názvu šablony, smazání, vytvoření tréninku ze šablony, zachování již vytvořeného tréninku po změně či smazání šablony, chování archivovaného cviku a exportu/obnovy JSON v1 a v2 uživatel potvrdil. Krok 8 je dokončen.
 
-## Další krok
+## 9. Měření tělesné hmotnosti
 
-- [x] Popsat samostatný datový kontrakt a hranice modulu.
+- [x] Popsat datový kontrakt měření hmotnosti.
+- [x] Přidat neměnný model, repository, SQLite migraci `4 → 5` a obrazovku.
+- [x] Rozšířit zálohu na JSON v3 a zachovat import v1/v2.
+- [x] Uživatel potvrdil uložení po restartu, převod `72,5 kg`, více měření za den a mazání.
+- [x] Uživatel potvrdil export a obnovu JSON v1, v2 a v3.
+
+Krok 9 je dokončený a ručně ověřený uživatelem.
+
+## 10. Měření obvodu pasu
+
+- [x] Popsat samostatný datový kontrakt a hranice měření obvodu pasu.
 - [x] Přidat neměnný doménový model a aplikační repository kontrakt.
-- [x] Uložit měření do SQLite migrací `4 → 5`.
-- [x] Rozšířit JSON zálohu na v3 a dál importovat v1/v2.
-- [x] Přidat záznam a historii do samostatné obrazovky; mazání chránit potvrzením.
-- [x] Potvrzeno uživatelem: uložené měření zůstává po znovuotevření aplikace.
-- [x] Uživatel ověřil převod `72,5 kg` a jeho zobrazení v historii.
-- [x] Uživatel potvrdil více měření ve stejný den a zrušení/potvrzení smazání.
-- [x] Uživatel potvrdil export a obnovu záloh JSON v1, v2 a v3.
+- [x] Uložit měření do SQLite migrací `5 → 6`.
+- [x] Rozšířit JSON zálohu na v4 a dál importovat v1/v2/v3.
+- [x] Přidat zadání, historii a potvrzené mazání na samostatnou obrazovku.
+- [ ] Ručně ověřit převod cm na mm, zachování po restartu, mazání a zálohu v4.
+
+Obvod pasu je samostatná časová řada v milimetrech. UI přijímá centimetry s přesností do desetiny centimetru; `82,5 cm` se uloží jako `825 mm`. SQLite tabulka a JSON pole jsou oddělené od hmotnosti. Ruční ověření nové obrazovky, migrace na telefonu a exportu/obnovy v4 ještě čeká.
+
+## Další nápady
+
 - Další tělesné údaje.
 - Cíle a připomínky.
 - Další typy cviků a měřených výkonů.
 - Účet, cloudová záloha a synchronizace po samostatném návrhu.
 
-Krok 9 je implementovaný a uživatel potvrdil zachování měření po restartu, přesný převod i zobrazení `72,5 kg`, více záznamů za den, chování smazání i export a obnovu záloh v1, v2 a v3. Uživatel také potvrdil všechny ruční kontroly kroku 8; krok 8 je dokončen.
+Krok 8 je dokončený; uživatel potvrdil ruční kontroly statistik a šablon. Krok 9 měření hmotnosti je dokončený a ověřený. Krok 10 měření obvodu pasu je implementovaný; jeho ruční ověření zůstává otevřené.
 
 ## Kontrola dokončení každého kroku
 

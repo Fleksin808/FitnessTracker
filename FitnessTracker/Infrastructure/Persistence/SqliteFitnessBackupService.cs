@@ -13,7 +13,7 @@ namespace FitnessTracker.Infrastructure.Persistence;
 /// <summary>Mapuje mezi verzovaným souborem JSON a aktuálním schématem SQLite.</summary>
 public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitnessBackupService
 {
-    private const int FormatVersion = 3;
+    private const int FormatVersion = 4;
     private const int MaximumFileBytes = 25 * 1024 * 1024;
     private const int MaximumRowsPerEntity = 100_000;
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -54,6 +54,10 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
                     .ThenBy(row => row.Position).ToList(),
                 BodyWeightMeasurements = transaction.Query<BodyWeightMeasurementRow>("SELECT * FROM BodyWeightMeasurements")
                     .Select(row => ToBackup(row.ToMeasurement())).OrderBy(row => row.MeasuredAtUtc, StringComparer.Ordinal)
+                    .ThenBy(row => row.Id, StringComparer.Ordinal).ToList(),
+                WaistCircumferenceMeasurements = transaction.Query<WaistCircumferenceMeasurementRow>(
+                        "SELECT * FROM WaistCircumferenceMeasurements")
+                    .Select(row => ToBackup(row.ToMeasurement())).OrderBy(row => row.MeasuredAtUtc, StringComparer.Ordinal)
                     .ThenBy(row => row.Id, StringComparer.Ordinal).ToList()
             };
         }).ConfigureAwait(false);
@@ -64,8 +68,9 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
             || document.WorkoutExercises.Count > MaximumRowsPerEntity || document.WorkoutSets.Count > MaximumRowsPerEntity
             || document.WorkoutTemplates!.Count > MaximumRowsPerEntity
             || document.WorkoutTemplateExercises!.Count > MaximumRowsPerEntity
-            || document.BodyWeightMeasurements!.Count > MaximumRowsPerEntity)
-            throw new InvalidOperationException("Záloha obsahuje příliš mnoho záznamů pro formát JSON v3.");
+            || document.BodyWeightMeasurements!.Count > MaximumRowsPerEntity
+            || document.WaistCircumferenceMeasurements!.Count > MaximumRowsPerEntity)
+            throw new InvalidOperationException("Záloha obsahuje příliš mnoho záznamů pro formát JSON v4.");
 
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(document, JsonOptions);
         if (bytes.Length > MaximumFileBytes)
@@ -79,7 +84,8 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         DateTimeOffset exportedAt = ParseUtcTimestamp(document.ExportedAtUtc, "exportedAtUtc");
         return Task.FromResult(new BackupSummary(document.Workouts.Count, document.Exercises.Count,
             document.WorkoutExercises.Count, document.WorkoutSets.Count, document.WorkoutTemplates?.Count ?? 0,
-            document.WorkoutTemplateExercises?.Count ?? 0, document.BodyWeightMeasurements?.Count ?? 0, exportedAt));
+            document.WorkoutTemplateExercises?.Count ?? 0, document.BodyWeightMeasurements?.Count ?? 0,
+            document.WaistCircumferenceMeasurements?.Count ?? 0, exportedAt));
     }
 
     public async Task RestoreAsync(ReadOnlyMemory<byte> json)
@@ -92,6 +98,7 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
             // Smažeme nejprve tréninky, aby jejich kaskády odstranily návazná data před katalogem.
             transaction.Execute("DELETE FROM Workouts");
             transaction.Execute("DELETE FROM BodyWeightMeasurements");
+            transaction.Execute("DELETE FROM WaistCircumferenceMeasurements");
             transaction.Execute("DELETE FROM WorkoutTemplates");
             transaction.Execute("DELETE FROM Exercises");
 
@@ -109,6 +116,13 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
                 var databaseRow = BodyWeightMeasurementRow.FromMeasurement(measurement);
                 transaction.Execute("INSERT INTO BodyWeightMeasurements (Id, MeasuredAtUtc, WeightGrams) VALUES (?, ?, ?)",
                     databaseRow.Id, databaseRow.MeasuredAtUtc, databaseRow.WeightGrams);
+            }
+            foreach (var row in document.WaistCircumferenceMeasurements ?? [])
+            {
+                var measurement = ToDomain(row);
+                var databaseRow = WaistCircumferenceMeasurementRow.FromMeasurement(measurement);
+                transaction.Execute("INSERT INTO WaistCircumferenceMeasurements (Id, MeasuredAtUtc, CircumferenceMillimeters) VALUES (?, ?, ?)",
+                    databaseRow.Id, databaseRow.MeasuredAtUtc, databaseRow.CircumferenceMillimeters);
             }
             foreach (var row in document.Workouts)
             {
@@ -139,10 +153,10 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         }
         catch (JsonException exception)
         {
-            throw new InvalidDataException("Soubor zálohy nemá platný formát JSON v1, v2 nebo v3.", exception);
+            throw new InvalidDataException("Soubor zálohy nemá platný formát JSON v1, v2, v3 nebo v4.", exception);
         }
 
-        if (document.FormatVersion is not (1 or 2 or FormatVersion))
+        if (document.FormatVersion is not (1 or 2 or 3 or FormatVersion))
             throw new InvalidDataException($"Verze zálohy {document.FormatVersion} není podporována.");
         if (document.Workouts is null || document.Exercises is null
             || document.WorkoutExercises is null || document.WorkoutSets is null)
@@ -155,14 +169,19 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
             throw new InvalidDataException("Záloha v1 nesmí obsahovat pole šablon.");
         if (document.FormatVersion is 1 or 2 && document.BodyWeightMeasurements is not null)
             throw new InvalidDataException($"Záloha v{document.FormatVersion} nesmí obsahovat měření tělesné hmotnosti.");
-        if (document.FormatVersion is 2 or FormatVersion
+        if (document.FormatVersion is 1 or 2 or 3 && document.WaistCircumferenceMeasurements is not null)
+            throw new InvalidDataException($"Záloha v{document.FormatVersion} nesmí obsahovat měření obvodu pasu.");
+        if (document.FormatVersion is 2 or 3 or FormatVersion
             && (document.WorkoutTemplates is null || document.WorkoutTemplateExercises is null))
             throw new InvalidDataException($"V záloze v{document.FormatVersion} chybí povinná pole šablon.");
-        if (document.FormatVersion == FormatVersion && document.BodyWeightMeasurements is null)
-            throw new InvalidDataException("V záloze v3 chybí povinné pole měření tělesné hmotnosti.");
+        if (document.FormatVersion is 3 or FormatVersion && document.BodyWeightMeasurements is null)
+            throw new InvalidDataException($"V záloze v{document.FormatVersion} chybí povinné pole měření tělesné hmotnosti.");
+        if (document.FormatVersion == FormatVersion && document.WaistCircumferenceMeasurements is null)
+            throw new InvalidDataException("V záloze v4 chybí povinné pole měření obvodu pasu.");
         if ((document.WorkoutTemplates?.Count ?? 0) > MaximumRowsPerEntity
             || (document.WorkoutTemplateExercises?.Count ?? 0) > MaximumRowsPerEntity
-            || (document.BodyWeightMeasurements?.Count ?? 0) > MaximumRowsPerEntity)
+            || (document.BodyWeightMeasurements?.Count ?? 0) > MaximumRowsPerEntity
+            || (document.WaistCircumferenceMeasurements?.Count ?? 0) > MaximumRowsPerEntity)
             throw new InvalidDataException("Záloha obsahuje příliš mnoho šablon, položek šablon nebo měření.");
 
         _ = ParseUtcTimestamp(document.ExportedAtUtc, "exportedAtUtc");
@@ -262,6 +281,16 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
             _ = BodyWeightMeasurement.Restore(id, measuredAt, row.WeightGrams);
         }
 
+        var waistMeasurementIds = new HashSet<Guid>();
+        foreach (var row in document.WaistCircumferenceMeasurements ?? [])
+        {
+            if (row is null) throw new InvalidDataException("Seznam měření obvodu pasu obsahuje prázdnou položku.");
+            Guid id = ParseId(row.Id, "waistCircumferenceMeasurement.id");
+            if (!waistMeasurementIds.Add(id)) throw new InvalidDataException("Záloha obsahuje duplicitní ID měření obvodu pasu.");
+            DateTimeOffset measuredAt = ParseUtcTimestamp(row.MeasuredAtUtc, "waistCircumferenceMeasurement.measuredAtUtc");
+            _ = WaistCircumferenceMeasurement.Restore(id, measuredAt, row.CircumferenceMillimeters);
+        }
+
         return document;
     }
 
@@ -336,6 +365,18 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         BodyWeightMeasurement.Restore(ParseId(row.Id, "bodyWeightMeasurement.id"),
             ParseUtcTimestamp(row.MeasuredAtUtc, "bodyWeightMeasurement.measuredAtUtc"), row.WeightGrams);
 
+    private static WaistCircumferenceMeasurementBackupRow ToBackup(WaistCircumferenceMeasurement measurement) => new()
+    {
+        Id = measurement.Id.ToString("D"),
+        MeasuredAtUtc = measurement.MeasuredAtUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture),
+        CircumferenceMillimeters = measurement.CircumferenceMillimeters
+    };
+
+    private static WaistCircumferenceMeasurement ToDomain(WaistCircumferenceMeasurementBackupRow row) =>
+        WaistCircumferenceMeasurement.Restore(ParseId(row.Id, "waistCircumferenceMeasurement.id"),
+            ParseUtcTimestamp(row.MeasuredAtUtc, "waistCircumferenceMeasurement.measuredAtUtc"),
+            row.CircumferenceMillimeters);
+
     private sealed class BackupDocument
     {
         public BackupDocument() { }
@@ -348,8 +389,10 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         // Nullable is intentional: older JSON v1 backups do not have these properties.
         public List<WorkoutTemplateBackupRow>? WorkoutTemplates { get; init; }
         public List<WorkoutTemplateExerciseBackupRow>? WorkoutTemplateExercises { get; init; }
-        // Vlastnost není povinná pro v1 a v2; v3 ji validační pravidla vyžadují.
+        // Hmotnost obsahuje v3 a novější formát; starší zálohy ji neměly.
         public List<BodyWeightMeasurementBackupRow>? BodyWeightMeasurements { get; init; }
+        // Obvod pasu přidává v4; importer starších záloh tuto vlastnost nevyžaduje.
+        public List<WaistCircumferenceMeasurementBackupRow>? WaistCircumferenceMeasurements { get; init; }
     }
 
     private sealed class WorkoutBackupRow
@@ -411,5 +454,13 @@ public sealed class SqliteFitnessBackupService(FitnessDatabase database) : IFitn
         public required string Id { get; init; }
         public required string MeasuredAtUtc { get; init; }
         public required long WeightGrams { get; init; }
+    }
+
+    private sealed class WaistCircumferenceMeasurementBackupRow
+    {
+        public WaistCircumferenceMeasurementBackupRow() { }
+        public required string Id { get; init; }
+        public required string MeasuredAtUtc { get; init; }
+        public required long CircumferenceMillimeters { get; init; }
     }
 }

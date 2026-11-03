@@ -8,7 +8,8 @@
             Features.Backup.BackupPage backupPage,
             Features.Statistics.StatisticsPage statisticsPage,
             Features.WorkoutTemplates.WorkoutTemplatesPage templatesPage,
-            Features.BodyMeasurements.BodyWeightMeasurementsPage bodyWeightMeasurementsPage)
+            Features.BodyMeasurements.BodyWeightMeasurementsPage bodyWeightMeasurementsPage,
+            Features.BodyMeasurements.WaistCircumferenceMeasurementsPage waistMeasurementsPage)
         {
             InitializeComponent();
 
@@ -23,6 +24,7 @@
             StatisticsContent.Content = statisticsPage;
             TemplatesContent.Content = templatesPage;
             BodyMeasurementsContent.Content = bodyWeightMeasurementsPage;
+            WaistMeasurementsContent.Content = waistMeasurementsPage;
         }
     }
 }

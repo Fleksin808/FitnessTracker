@@ -170,7 +170,7 @@ Automatické ověření zahrnuje přesnost a null/0, změny katalogu, souběh, r
 
 ### Záloha a obnova v kroku 7
 
-- JSON v3 je přenosový kontrakt; databáze zůstává SQLite. Import podporuje v1 a v2. Přenosné DTO a validace jsou oddělené od doménových modelů a řádků SQLite.
+- JSON v4 je přenosový kontrakt; databáze zůstává SQLite. Import podporuje v1, v2 a v3. Přenosné DTO a validace jsou oddělené od doménových modelů a řádků SQLite.
 - Import nejprve validuje celý soubor mimo databázový zápis. Po potvrzení uživatele nahradí celý lokální deník jedinou transakcí; zrušení nebo validační chyba současná data nemění.
 - Obnova zapisuje do stávajícího připojení v pořadí závislostí. Není potřeba vyměňovat soubor databáze ani obcházet `FitnessDatabase`; rollback transakce zachová původní obsah při chybě.
 - `IFitnessBackupService` odděluje souborový JSON kontrakt od obrazovky. `BackupPage` používá systémový výběr souboru a sdílení; uživatel sám zvolí cílové umístění exportu.
@@ -196,6 +196,12 @@ Automatické ověření zahrnuje přesnost a null/0, změny katalogu, souběh, r
 - `BodyWeightMeasurementsPage` a ViewModel nabízejí záznam, přehled a smazání chybného měření s potvrzením. `BodyWeightMeasurement` uchovává ID, okamžik pořízení a hmotnost v celých gramech; více měření během jednoho dne je povoleno.
 - UI přijímá kg, ověřuje přesný převod na gramy a ukládá okamžik v UTC. Seznam řadí od nejnovějšího měření a zobrazuje čas v místním pásmu zařízení. DI přidává nové rozhraní, ViewModel a stránku jako vlastní záložku.
 - SQLite migrace `4 → 5` a `SqliteBodyWeightMeasurementRepository` ukládají měření do samostatné tabulky. JSON záloha přechází na v3 a zachovává import v1 i v2; starší verze nemají měření, proto jejich import vytvoří deník bez těchto záznamů.
+
+### Obvod pasu
+
+- `WaistCircumferenceMeasurement` a `IWaistCircumferenceMeasurementRepository` tvoří samostatný záznamový tok vedle hmotnosti. Vlastní velikost se ukládá v milimetrech; čas pořízení se normalizuje na UTC.
+- `WaistCircumferenceMeasurementsPage` a ViewModel přijímají centimetry, validují přesnost do milimetru, zobrazují historii a vyžadují potvrzení před smazáním.
+- Migrace `5 → 6` přidává vlastní tabulku. JSON v4 přidává pole `waistCircumferenceMeasurements`, ověřuje ID, UTC čas i kladnou hodnotu a nadále přijímá JSON v1–v3.
 
 ### Katalog cviků v kroku 4
 

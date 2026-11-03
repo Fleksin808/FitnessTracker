@@ -46,8 +46,11 @@ namespace FitnessTracker
             builder.Services.AddSingleton<IWorkoutStatisticsRepository, SqliteWorkoutStatisticsRepository>();
             builder.Services.AddSingleton<IWorkoutTemplateRepository, SqliteWorkoutTemplateRepository>();
             builder.Services.AddSingleton<IBodyWeightMeasurementRepository, SqliteBodyWeightMeasurementRepository>();
+            builder.Services.AddSingleton<IWaistCircumferenceMeasurementRepository, SqliteWaistCircumferenceMeasurementRepository>();
             builder.Services.AddTransient<BodyWeightMeasurementsViewModel>();
             builder.Services.AddTransient<BodyWeightMeasurementsPage>();
+            builder.Services.AddTransient<WaistCircumferenceMeasurementsViewModel>();
+            builder.Services.AddTransient<WaistCircumferenceMeasurementsPage>();
             builder.Services.AddTransient<WorkoutTemplatesViewModel>();
             builder.Services.AddTransient<WorkoutTemplatesPage>();
             builder.Services.AddTransient<BackupViewModel>();

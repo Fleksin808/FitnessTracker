@@ -67,7 +67,8 @@ public partial class BackupPage : ContentPage
                     $"Záloha obsahuje {summary.WorkoutCount} tréninků, {summary.ExerciseCount} cviků, " +
                     $"{summary.WorkoutExerciseCount} zaznamenaných cviků a {summary.WorkoutSetCount} sérií. " +
                     $"Dále obsahuje {summary.WorkoutTemplateCount} šablon a " +
-                    $"{summary.BodyWeightMeasurementCount} měření tělesné hmotnosti. " +
+                    $"{summary.BodyWeightMeasurementCount} měření tělesné hmotnosti a " +
+                    $"{summary.WaistCircumferenceMeasurementCount} měření obvodu pasu. " +
                     "Pokračováním nahradíš celý současný deník.",
                     "Nahradit data", "Zrušit"));
         }
