@@ -248,10 +248,10 @@ Report má stručný název, několik bodů s provedenými změnami a řádek `O
 
 ## Přehled využití Codexu v projektových chatech
 
-- Počítáme uživatelské prompty samostatně v každém chatu. Začátek každé odpovědi uvede počítadlo od posledního přehledu, například `[2/5]`.
-- Po pátém promptu načteme aktuální account-wide limity Codexu a uvedeme zbývající procenta i textové ukazatele. Reportujeme přesné délky oken, které nástroj vrátí; pětihodinové okno nenazýváme denním limitem.
-- Pokud denní údaj nebo procento není dostupné, napíšeme to výslovně. Neodhadujeme spotřebu tokenů jednotlivého chatu; account-wide limit není token usage tohoto vlákna.
-- Po přehledu se počítadlo daného chatu vrací na nulu. Při ukončení práce navíc stručně zhodnotíme zahlcení vlákna, kvalitativně a bez vymyšleného přesného čísla tokenů.
+- Počítáme uživatelské prompty samostatně v každém chatu. Začátek každé vypracované odpovědi uvede počítadlo od posledního přehledu: `[1/5]` až `[5/5]`.
+- Po pátém promptu před reportem načteme aktuální account-wide limity Codexu. Uvedeme zbývající procenta a textový ukazatel pro dostupná okna, přesně označená podle jejich délky, zejména `5hodinový limit` a `týdenní limit`.
+- Denní údaj neuvádíme. Pokud některé z požadovaných oken nebo jeho procento není dostupné, výslovně uvedeme, že tato hodnota není dostupná. Nic neodhadujeme a účetní limity nevydáváme za spotřebu jednotlivého chatu.
+- Po reportu se počítadlo daného chatu vrací na nulu. Při ukončení práce navíc stručně zhodnotíme zahlcení vlákna, kvalitativně a bez vymyšleného přesného čísla tokenů.
 
 ## Dokumentace rozhodnutí
 
