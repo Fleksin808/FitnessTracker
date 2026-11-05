@@ -5,7 +5,8 @@
              x:Class="FitnessTracker.Features.Statistics.StatisticsPage"
              x:DataType="statistics:StatisticsViewModel"
              Title="Statistiky">
-    <VerticalStackLayout Padding="24" Spacing="12">
+    <ScrollView>
+      <VerticalStackLayout Padding="24" Spacing="12">
         <Label Text="Statistiky" Style="{StaticResource Headline}"
                SemanticProperties.HeadingLevel="Level1" />
         <Label Text="Přehled za celou historii. Zahrnuje i rozpracované tréninky." />
@@ -20,8 +21,21 @@
             <Label Grid.Row="3" Grid.Column="1" Text="{Binding VolumeText}" />
         </Grid>
         <Label Text="Objem = součet opakování × zadaná vnější zátěž. Série bez zátěže se vynechávají." />
+        <BoxView HeightRequest="1" />
+        <Label Text="Týdenní cíl" FontAttributes="Bold" />
+        <Label Text="Počítají se dokončené tréninky od pondělí do začátku dalšího týdne podle místního času." />
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Entry Text="{Binding WeeklyGoalInput, Mode=TwoWay}" Placeholder="Tréninky za týden"
+                   Keyboard="Numeric" IsEnabled="{Binding CanInteract}"
+                   SemanticProperties.Description="Cílový počet dokončených tréninků za týden" />
+            <Button Grid.Column="1" Text="Uložit cíl" Command="{Binding SaveWeeklyGoalCommand}" />
+        </Grid>
+        <Label Text="{Binding WeeklyProgressText}" FontAttributes="Bold" />
+        <Label Text="{Binding WeeklyGoalStatusText}" />
+        <Label Text="{Binding GoalMessage}" />
         <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
         <Button Text="Obnovit statistiky" Command="{Binding ReloadCommand}" />
         <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="Red" />
-    </VerticalStackLayout>
+      </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

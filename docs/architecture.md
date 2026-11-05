@@ -205,6 +205,12 @@ Tělesné míry jsou pod jednou záložkou Metriky, zatímco hmotnost zůstává
 - `BodyMeasurementsPage` nabízí výběr pasu, hrudníku, boků, krku a končetin; vstup je v centimetrech a ukládá celé milimetry.
 - Schéma 7 ukládá všechny části do `BodyMeasurements`. Migrace převede případná data z předchozí tabulky pasu. JSON v5 obsahuje `bodyMeasurements`; importer v4 převede staré měření pasu a import v1–v4 zůstává podporovaný.
 
+### Týdenní cíl tréninků
+
+- Cíl 1–7 dokončených tréninků za týden patří do MAUI Preferences, protože jde o malé uživatelské nastavení.
+- Statistiky počítají ukončené tréninky podle `FinishedAt` v místním kalendářním týdnu od pondělí a porovnají výsledek s cílem.
+- Připomínky nejsou součástí této části; jejich plánování a oprávnění oznámení navrhneme zvlášť.
+
 ### Katalog cviků v kroku 4
 
 - `Domain/Exercises/Exercise` je neměnná definice cviku s ID, názvem a archivací. `WithName` a `WithArchived` vytvářejí nové verze stejné identity, takže se nemění dřívější snímky.

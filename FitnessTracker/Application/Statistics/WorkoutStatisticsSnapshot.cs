@@ -11,4 +11,5 @@ public sealed record WorkoutStatisticsSnapshot(
 public interface IWorkoutStatisticsRepository
 {
     Task<WorkoutStatisticsSnapshot> GetAllTimeAsync();
+    Task<int> GetFinishedCountAsync(DateTimeOffset fromUtc, DateTimeOffset toUtc);
 }

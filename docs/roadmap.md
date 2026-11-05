@@ -165,18 +165,27 @@ Krok 9 je dokončený a ručně ověřený uživatelem.
 - [x] Uložit metriky do SQLite schématu 7 a zachovat záznamy z přechodného schématu 6.
 - [x] Rozšířit JSON zálohu na v5 a dál importovat v1 až v4.
 - [x] Přidat zadání, historii a potvrzené mazání na samostatnou obrazovku.
-- [ ] Ručně ověřit části těla, převod cm na mm, zachování po restartu, mazání a zálohu v5.
+- [x] Uživatel potvrdil části těla, převod cm na mm, zachování po restartu, mazání i zálohu v5.
 
-Záložka Metriky umožňuje zaznamenat pas, hrudník, boky, krk a levou či pravou paži, stehno a lýtko. Hodnoty se ukládají v milimetrech do společné tabulky s typem části těla. JSON v5 používá `bodyMeasurements`; importer v4 převede dřívější pole obvodu pasu. Ruční ověření nové obrazovky, migrace na telefonu a exportu/obnovy v5 ještě čeká.
+Záložka Metriky umožňuje zaznamenat pas, hrudník, boky, krk a levou či pravou paži, stehno a lýtko. Hodnoty se ukládají v milimetrech do společné tabulky s typem části těla. JSON v5 používá `bodyMeasurements`; importer v4 převede dřívější pole obvodu pasu. Uživatel potvrdil ruční ověření převodu, zachování dat po restartu, mazání a zálohy v5 na telefonu. Krok 10 je dokončený.
+
+## 11. Týdenní cíl tréninků
+
+- [x] Nastavit cíl 1–7 dokončených tréninků týdně.
+- [x] Uložit volbu v MAUI Preferences a zobrazit průběh ve Statistikách.
+- [x] Počítat ukončené tréninky podle místního týdne od pondělí.
+- [ ] Ručně ověřit uložení cíle po restartu a přírůstek po dokončení tréninku.
+
+Cíl má výchozí hodnotu 3 a není součástí zálohy, protože je to nastavení zařízení. Připomínky zatím nejsou implementované.
 
 ## Další nápady
 
 - Další tělesné údaje.
-- Cíle a připomínky.
+- Připomínky k tréninkovému cíli.
 - Další typy cviků a měřených výkonů.
 - Účet, cloudová záloha a synchronizace po samostatném návrhu.
 
-Krok 8 je dokončený; uživatel potvrdil ruční kontroly statistik a šablon. Krok 9 měření hmotnosti je dokončený a ověřený. Krok 10 měření obvodu pasu je implementovaný; jeho ruční ověření zůstává otevřené.
+Krok 8 statistik a šablon, krok 9 hmotnosti i krok 10 tělesných metrik jsou dokončené a ručně ověřené uživatelem. Základ týdenního cíle v kroku 11 je implementovaný; jeho ruční ověření zůstává otevřené.
 
 ## Kontrola dokončení každého kroku
 

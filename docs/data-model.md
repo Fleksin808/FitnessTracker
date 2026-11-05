@@ -247,6 +247,8 @@ První souhrn zahrnuje všechna uložená data, včetně rozpracovaných trénin
 
 Rozsah je zatím „celá historie“, bez filtru období. Repository načítá počty a série v jedné transakci. Výpočty je potřeba ručně porovnat s malým známým souborem dat před rozšířením statistik.
 
+Týdenní cíl ukládáme jako malé nastavení MAUI Preferences (výchozí hodnota 3; povolené hodnoty 1–7), ne do deníku ani zálohy. Pokrok počítá ukončené tréninky podle `FinishedAt`, jehož místní čas spadá do aktuálního týdne od pondělí včetně do dalšího pondělí bez zahrnutí. Hranice se převedou do UTC před dotazem SQLite. Připomínky a oznámení jsou samostatný budoucí krok.
+
 ## Šablony tréninku
 
 Šablona odděluje definici plánu od skutečného výkonu:
