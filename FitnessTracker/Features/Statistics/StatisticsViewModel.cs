@@ -11,8 +11,10 @@ namespace FitnessTracker.Features.Statistics;
 public sealed class StatisticsViewModel : INotifyPropertyChanged
 {
     private const string WeeklyGoalPreferenceKey = "statistics.weekly-workout-goal";
+    private const string WeeklyReminderPreferenceKey = "statistics.weekly-workout-reminder-enabled";
     private const int DefaultWeeklyGoal = 3;
     private readonly IWorkoutStatisticsRepository repository;
+    private readonly IWorkoutReminderService reminderService;
     private readonly ILogger<StatisticsViewModel> logger;
     private readonly Command reloadCommand;
     private readonly Command saveWeeklyGoalCommand;
@@ -23,10 +25,14 @@ public sealed class StatisticsViewModel : INotifyPropertyChanged
     private int weeklyGoal;
     private int weeklyFinishedCount;
     private string? goalMessage;
+    private bool reminderEnabled;
+    private string? reminderMessage;
 
-    public StatisticsViewModel(IWorkoutStatisticsRepository repository, ILogger<StatisticsViewModel> logger)
+    public StatisticsViewModel(IWorkoutStatisticsRepository repository, IWorkoutReminderService reminderService,
+        ILogger<StatisticsViewModel> logger)
     {
         this.repository = repository;
+        this.reminderService = reminderService;
         this.logger = logger;
         weeklyGoal = Math.Clamp(Preferences.Default.Get(WeeklyGoalPreferenceKey, DefaultWeeklyGoal), 1, 7);
         weeklyGoalInput = weeklyGoal.ToString(CultureInfo.CurrentCulture);
@@ -55,6 +61,14 @@ public sealed class StatisticsViewModel : INotifyPropertyChanged
         ? "Týdenní cíl je splněný."
         : $"Do cíle zbývá {weeklyGoal - weeklyFinishedCount} tréninků.";
     public string? GoalMessage { get => goalMessage; private set => SetField(ref goalMessage, value); }
+    public bool ReminderEnabled
+    {
+        get => reminderEnabled;
+        private set => SetField(ref reminderEnabled, value);
+    }
+    public bool IsReminderSupported => reminderService.IsSupported;
+    public bool IsReminderUnsupported => !IsReminderSupported;
+    public string? ReminderMessage { get => reminderMessage; private set => SetField(ref reminderMessage, value); }
     public string WorkoutCountText => snapshot?.WorkoutCount.ToString("N0", CultureInfo.CurrentCulture) ?? "—";
     public string FinishedCountText => snapshot?.FinishedWorkoutCount.ToString("N0", CultureInfo.CurrentCulture) ?? "—";
     public string SetCountText => snapshot?.SetCount.ToString("N0", CultureInfo.CurrentCulture) ?? "—";
@@ -79,6 +93,7 @@ public sealed class StatisticsViewModel : INotifyPropertyChanged
         ErrorMessage = null;
         try
         {
+            ReminderEnabled = Preferences.Default.Get(WeeklyReminderPreferenceKey, false);
             snapshot = await repository.GetAllTimeAsync();
             (DateTimeOffset weekStartUtc, DateTimeOffset nextWeekStartUtc) = GetCurrentLocalWeekUtc();
             weeklyFinishedCount = await repository.GetFinishedCountAsync(weekStartUtc, nextWeekStartUtc);
@@ -88,6 +103,50 @@ public sealed class StatisticsViewModel : INotifyPropertyChanged
         {
             logger.LogError(exception, "Nepodařilo se načíst statistiky tréninků.");
             ErrorMessage = "Statistiky se nepodařilo načíst. Zkus to znovu.";
+        }
+        finally { IsBusy = false; }
+    }
+
+    public async Task SetReminderEnabledAsync(bool enabled)
+    {
+        if (IsBusy) return;
+        if (!IsReminderSupported)
+        {
+            ReminderMessage = "Týdenní připomínky jsou dostupné na Androidu a iOS.";
+            return;
+        }
+
+        bool previousValue = ReminderEnabled;
+        IsBusy = true;
+        try
+        {
+            if (enabled)
+            {
+                // Oprávnění žádáme až po výslovném zapnutí připomínky uživatelem.
+                if (!await reminderService.RequestPermissionAsync())
+                {
+                    ReminderMessage = "Oznámení nejsou povolena; připomínka zůstala vypnutá.";
+                    return;
+                }
+
+                await reminderService.ScheduleWeeklyAsync(DayOfWeek.Sunday, TimeSpan.FromHours(18));
+            }
+            else
+            {
+                await reminderService.CancelAsync();
+            }
+
+            Preferences.Default.Set(WeeklyReminderPreferenceKey, enabled);
+            ReminderEnabled = enabled;
+            ReminderMessage = enabled
+                ? "Připomeneme se každou neděli v 18:00."
+                : "Týdenní připomínka je vypnutá.";
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Nepodařilo se změnit týdenní připomínku.");
+            ReminderEnabled = previousValue;
+            ReminderMessage = "Připomínku se nepodařilo změnit. Zkus to znovu.";
         }
         finally { IsBusy = false; }
     }

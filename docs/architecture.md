@@ -209,7 +209,8 @@ Tělesné míry jsou pod jednou záložkou Metriky, zatímco hmotnost zůstává
 
 - Cíl 1–7 dokončených tréninků za týden patří do MAUI Preferences, protože jde o malé uživatelské nastavení.
 - Statistiky počítají ukončené tréninky podle `FinishedAt` v místním kalendářním týdnu od pondělí a porovnají výsledek s cílem.
-- Připomínky nejsou součástí této části; jejich plánování a oprávnění oznámení navrhneme zvlášť.
+- Volitelná připomínka používá `IWorkoutReminderService`; implementace `LocalWorkoutReminderService` izoluje [Plugin.LocalNotification 14.1.2](https://www.nuget.org/packages/Plugin.LocalNotification) od ViewModelu. Používáme jeho plánovaná opakovaná oznámení pro Android/iOS; desktopová varianta připomínku nezobrazuje.
+- Oprávnění žádáme po zapnutí. Na Androidu a iOS se opakuje každou neděli v 18:00 místního času; vypnutí naplánované oznámení zruší. Na desktopové platformě je přepínač skrytý.
 
 ### Katalog cviků v kroku 4
 

@@ -33,6 +33,16 @@
         <Label Text="{Binding WeeklyProgressText}" FontAttributes="Bold" />
         <Label Text="{Binding WeeklyGoalStatusText}" />
         <Label Text="{Binding GoalMessage}" />
+        <BoxView HeightRequest="1" />
+        <Label Text="Týdenní připomínka" FontAttributes="Bold"
+               IsVisible="{Binding IsReminderSupported}" />
+        <HorizontalStackLayout Spacing="10" IsVisible="{Binding IsReminderSupported}">
+            <Switch x:Name="WeeklyReminderSwitch" IsEnabled="{Binding CanInteract}"
+                    Toggled="OnWeeklyReminderToggled"
+                    SemanticProperties.Description="Zapnout týdenní připomínku v neděli v 18 hodin" />
+            <Label Text="Neděle v 18:00" VerticalOptions="Center" />
+        </HorizontalStackLayout>
+        <Label Text="{Binding ReminderMessage}" IsVisible="{Binding IsReminderSupported}" />
         <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
         <Button Text="Obnovit statistiky" Command="{Binding ReloadCommand}" />
         <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="Red" />

@@ -1,5 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 
+#if ANDROID || IOS
+using Plugin.LocalNotification;
+#endif
+
 namespace FitnessTracker
 {
     using Features.Workouts;
@@ -16,6 +20,7 @@ namespace FitnessTracker
     using Application.BodyMeasurements;
     using Features.BodyMeasurements;
     using Infrastructure.Persistence;
+    using Infrastructure.Notifications;
     using Microsoft.Extensions.DependencyInjection;
 
     public static class MauiProgram
@@ -23,13 +28,16 @@ namespace FitnessTracker
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
-            builder
-                .UseMauiApp<App>()
-                .ConfigureFonts(fonts =>
-                {
-                    fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                    fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-                });
+            builder.UseMauiApp<App>();
+#if ANDROID || IOS
+            // Nativní oznámení registrujeme jen pro platformy, které je plugin podporuje.
+            builder.UseLocalNotification();
+#endif
+            builder.ConfigureFonts(fonts =>
+            {
+                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+            });
 
 #if DEBUG
     		builder.Logging.AddDebug();
@@ -44,6 +52,7 @@ namespace FitnessTracker
             builder.Services.AddSingleton<IExerciseRepository, SqliteExerciseRepository>();
             builder.Services.AddSingleton<IFitnessBackupService, SqliteFitnessBackupService>();
             builder.Services.AddSingleton<IWorkoutStatisticsRepository, SqliteWorkoutStatisticsRepository>();
+            builder.Services.AddSingleton<IWorkoutReminderService, LocalWorkoutReminderService>();
             builder.Services.AddSingleton<IWorkoutTemplateRepository, SqliteWorkoutTemplateRepository>();
             builder.Services.AddSingleton<IBodyWeightMeasurementRepository, SqliteBodyWeightMeasurementRepository>();
             builder.Services.AddSingleton<IBodyMeasurementRepository, SqliteBodyMeasurementRepository>();

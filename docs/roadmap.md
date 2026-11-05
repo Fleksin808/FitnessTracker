@@ -174,18 +174,19 @@ Záložka Metriky umožňuje zaznamenat pas, hrudník, boky, krk a levou či pra
 - [x] Nastavit cíl 1–7 dokončených tréninků týdně.
 - [x] Uložit volbu v MAUI Preferences a zobrazit průběh ve Statistikách.
 - [x] Počítat ukončené tréninky podle místního týdne od pondělí.
-- [ ] Ručně ověřit uložení cíle po restartu a přírůstek po dokončení tréninku.
+- [x] Uživatel potvrdil uložení cíle po restartu a přírůstek po dokončení tréninku.
+- [x] Přidat volitelnou týdenní připomínku s oprávněním a vypnutím.
+- [ ] Ručně ověřit povolení oznámení, doručení v neděli v 18:00, zrušení a zachování po restartu telefonu.
 
-Cíl má výchozí hodnotu 3 a není součástí zálohy, protože je to nastavení zařízení. Připomínky zatím nejsou implementované.
+Cíl má výchozí hodnotu 3 a připomínka je ve výchozím stavu vypnutá. Obě volby jsou v MAUI Preferences a nejsou součástí zálohy. Připomínky běží na Androidu a iOS; desktopové sestavení jejich přepínač nezobrazuje.
 
 ## Další nápady
 
 - Další tělesné údaje.
-- Připomínky k tréninkovému cíli.
 - Další typy cviků a měřených výkonů.
 - Účet, cloudová záloha a synchronizace po samostatném návrhu.
 
-Krok 8 statistik a šablon, krok 9 hmotnosti i krok 10 tělesných metrik jsou dokončené a ručně ověřené uživatelem. Základ týdenního cíle v kroku 11 je implementovaný; jeho ruční ověření zůstává otevřené.
+Kroky 8 statistik a šablon, 9 hmotnosti, 10 tělesných metrik i týdenní cíl v kroku 11 uživatel ručně ověřil. Připomínka kroku 11 je implementovaná; její doručení na telefonu zůstává otevřené.
 
 ## Kontrola dokončení každého kroku
 
